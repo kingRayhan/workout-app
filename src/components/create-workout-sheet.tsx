@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { TagFilterBar } from "@/components/workout-catalog";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -20,21 +20,42 @@ import {
   allCatalogExercises,
   filterExercisesByTag,
 } from "@/lib/catalog";
-import { createWorkout } from "@/lib/user-data";
+import {
+  createWorkout,
+  updateWorkout,
+  type Workout,
+} from "@/lib/user-data";
 
 export function CreateWorkoutSheet({
   open,
   onOpenChange,
+  workout = null,
 }: {
   open: boolean;
   onOpenChange: (open: boolean) => void;
+  workout?: Workout | null;
 }) {
   const { user } = useAuth();
+  const isEdit = Boolean(workout);
   const [name, setName] = useState("");
   const [selected, setSelected] = useState<string[]>([]);
   const [tag, setTag] = useState<MuscleGroup | null>(null);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (!open) return;
+    if (workout) {
+      setName(workout.name);
+      setSelected([...workout.exerciseIds]);
+    } else {
+      setName("");
+      setSelected([]);
+    }
+    setTag(null);
+    setError(null);
+    setSaving(false);
+  }, [open, workout]);
 
   const selectedSet = useMemo(() => new Set(selected), [selected]);
   const all = useMemo(() => allCatalogExercises(), []);
@@ -62,7 +83,14 @@ export function CreateWorkoutSheet({
     setSaving(true);
     setError(null);
     try {
-      await createWorkout(user.uid, { name, exerciseIds: selected });
+      if (workout) {
+        await updateWorkout(user.uid, workout.id, {
+          name,
+          exerciseIds: selected,
+        });
+      } else {
+        await createWorkout(user.uid, { name, exerciseIds: selected });
+      }
       reset();
       onOpenChange(false);
     } catch (err) {
@@ -85,10 +113,12 @@ export function CreateWorkoutSheet({
       >
         <SheetHeader className="border-b border-border/80">
           <SheetTitle className="text-[17px] font-semibold">
-            New workout
+            {isEdit ? "Edit workout" : "New workout"}
           </SheetTitle>
           <SheetDescription>
-            Name it, filter by tag, then pick exercises.
+            {isEdit
+              ? "Update the name or exercises."
+              : "Name it, filter by tag, then pick exercises."}
           </SheetDescription>
         </SheetHeader>
 
@@ -153,7 +183,11 @@ export function CreateWorkoutSheet({
             disabled={saving || !name.trim() || selected.length === 0}
             onClick={() => void onSave()}
           >
-            {saving ? "Saving…" : "Save workout"}
+            {saving
+              ? "Saving…"
+              : isEdit
+                ? "Save changes"
+                : "Save workout"}
           </Button>
         </SheetFooter>
       </SheetContent>

@@ -26,6 +26,7 @@ import {
   deleteWorkoutAndUnschedule,
   importTrainerPlan,
   setScheduleDay,
+  type Workout,
 } from "@/lib/user-data";
 
 export function PlanScreen() {
@@ -33,6 +34,7 @@ export function PlanScreen() {
   const { workouts, loading: workoutsLoading } = useWorkouts();
   const { schedule, loading: scheduleLoading } = useSchedule();
   const [createOpen, setCreateOpen] = useState(false);
+  const [editing, setEditing] = useState<Workout | null>(null);
   const [scheduleDay, setScheduleDayState] = useState<WeekdayKey | null>(null);
   const [deleteId, setDeleteId] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
@@ -146,22 +148,36 @@ export function PlanScreen() {
                     <li key={w.id}>
                       {i > 0 ? <Separator className="my-1" /> : null}
                       <div className="flex min-h-12 items-center justify-between gap-2 py-1">
-                        <div className="min-w-0">
+                        <button
+                          type="button"
+                          className="min-w-0 flex-1 text-left active:opacity-80"
+                          onClick={() => setEditing(w)}
+                        >
                           <p className="truncate text-[15px] font-medium">
                             {w.name}
                           </p>
                           <p className="text-[12px] text-muted-foreground">
                             {w.exerciseIds.length} exercises
                           </p>
+                        </button>
+                        <div className="flex shrink-0 items-center">
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            className="text-muted-foreground"
+                            onClick={() => setEditing(w)}
+                          >
+                            Edit
+                          </Button>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            className="text-muted-foreground"
+                            onClick={() => setDeleteId(w.id)}
+                          >
+                            Delete
+                          </Button>
                         </div>
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          className="text-muted-foreground"
-                          onClick={() => setDeleteId(w.id)}
-                        >
-                          Delete
-                        </Button>
                       </div>
                     </li>
                   ))}
@@ -223,7 +239,17 @@ export function PlanScreen() {
         </Link>
       </div>
 
-      <CreateWorkoutSheet open={createOpen} onOpenChange={setCreateOpen} />
+      <CreateWorkoutSheet
+        key={editing?.id ?? "new"}
+        open={createOpen || editing !== null}
+        onOpenChange={(open) => {
+          if (!open) {
+            setCreateOpen(false);
+            setEditing(null);
+          }
+        }}
+        workout={editing}
+      />
       <ScheduleDaySheet
         open={scheduleDay !== null}
         onOpenChange={(open) => {

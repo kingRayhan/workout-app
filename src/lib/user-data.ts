@@ -7,6 +7,7 @@ import {
   query,
   serverTimestamp,
   setDoc,
+  updateDoc,
   type Unsubscribe,
   where,
   writeBatch,
@@ -119,6 +120,27 @@ export async function createWorkout(
     updatedAt: serverTimestamp(),
   });
   return ref.id;
+}
+
+export async function updateWorkout(
+  uid: string,
+  workoutId: string,
+  input: {
+    name: string;
+    exerciseIds: string[];
+  },
+): Promise<void> {
+  const name = input.name.trim().slice(0, 60);
+  if (!name) throw new Error("Name your workout.");
+  const exerciseIds = input.exerciseIds.filter(isCatalogExerciseId).slice(0, 40);
+  if (exerciseIds.length === 0) {
+    throw new Error("Add at least one exercise.");
+  }
+  await updateDoc(doc(workoutsCol(uid), workoutId), {
+    name,
+    exerciseIds,
+    updatedAt: serverTimestamp(),
+  });
 }
 
 export async function deleteWorkout(uid: string, workoutId: string) {
