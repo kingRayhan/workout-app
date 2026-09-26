@@ -62,7 +62,15 @@ export const EXERCISE_MACHINE: Record<string, string> = {
   "barbell-curl": "barbell",
   "preacher-curl": "preacher-curl",
   "hammer-curl": "dumbbells",
+  "shoulder-raise-machine": "shoulder-raise-machine",
+  "glute-kickback": "glute-machine",
+  "smith-machine-squat": "smith-machine",
+  "triceps-machine-extension": "triceps-machine",
+  "power-rack-chinup": "power-rack",
+  "biceps-machine-curl": "biceps-machine",
+  "ab-machine-crunch": "ab-machine",
+  "waist-rotary": "waist-rotary",
 };
 
 export const MEDIA_CREDIT =
-  "Form videos: free-exercise-db-with-videos (MIT, 1080p). Machine photos: Wikimedia Commons & Unsplash.";
+  "Form videos: free-exercise-db-with-videos (MIT, 1080p). Machine photos: WNQ Fitness product photography (internal reference use) & Wikimedia Commons/Unsplash.";

@@ -1,9 +1,13 @@
 "use client";
 
 import { BottomTabs } from "@/components/bottom-tabs";
+import { SplashScreen } from "@/components/splash-screen";
+import { useAuth } from "@/lib/auth";
 import type { ReactNode } from "react";
 
 export function AppShell({ children }: { children: ReactNode }) {
+  const { loading } = useAuth();
+
   return (
     <div className="app-viewport flex min-h-dvh flex-col items-center justify-center px-0 sm:px-4 sm:py-6">
       <div className="app-phone relative flex h-dvh w-full max-w-[430px] flex-col overflow-hidden bg-background sm:h-[min(844px,calc(100dvh-3rem))] sm:rounded-[2rem] sm:border sm:border-border sm:shadow-[0_25px_80px_-20px_rgba(0,0,0,0.65)]">
@@ -16,6 +20,8 @@ export function AppShell({ children }: { children: ReactNode }) {
         </main>
 
         <BottomTabs />
+
+        {loading ? <SplashScreen /> : null}
       </div>
     </div>
   );

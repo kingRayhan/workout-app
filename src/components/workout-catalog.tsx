@@ -2,7 +2,7 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { AppHeader } from "@/components/app-header";
 import { Badge } from "@/components/ui/badge";
 import { getMachine } from "@/data/machines";
@@ -98,7 +98,10 @@ export function ExerciseRow({
   const extra = getExerciseExtra(exercise.id);
 
   return (
-    <article className={cn(open && "bg-muted/50")}>
+    <article
+      id={`exercise-${exercise.id}`}
+      className={cn("scroll-mt-36", open && "bg-muted/50")}
+    >
       <button
         type="button"
         onClick={onToggle}
@@ -255,7 +258,7 @@ export function ExerciseRow({
                   src={machine.image}
                   alt=""
                   fill
-                  className="object-cover"
+                  className="object-contain p-0.5"
                   sizes="56px"
                 />
               </span>
@@ -282,15 +285,17 @@ export function WorkoutCatalog({
   embedded = false,
   tag = null,
   query = "",
+  focusExerciseId = null,
   onTagChange,
 }: {
   embedded?: boolean;
   tag?: MuscleGroup | null;
   query?: string;
+  focusExerciseId?: string | null;
   onTagChange?: (tag: MuscleGroup | null) => void;
 }) {
   const [localTag, setLocalTag] = useState<MuscleGroup | null>(null);
-  const [openId, setOpenId] = useState<string | null>(null);
+  const [openId, setOpenId] = useState<string | null>(focusExerciseId);
 
   const activeTag = onTagChange ? tag : localTag;
   const setTag = onTagChange ?? setLocalTag;
@@ -301,13 +306,20 @@ export function WorkoutCatalog({
     return filterExercisesByQuery(byTag, query);
   }, [all, activeTag, query]);
 
+  useEffect(() => {
+    if (!focusExerciseId) return;
+    setOpenId(focusExerciseId);
+    const timer = window.setTimeout(() => {
+      document
+        .getElementById(`exercise-${focusExerciseId}`)
+        ?.scrollIntoView({ behavior: "smooth", block: "start" });
+    }, 80);
+    return () => window.clearTimeout(timer);
+  }, [focusExerciseId]);
+
   const body = (
     <>
       <div className="space-y-2.5 px-4 pt-2">
-        <p className="rounded-lg bg-muted px-3 py-2 text-[12px] leading-snug text-muted-foreground">
-          <span className="font-medium text-foreground">Weight:</span> last reps
-          hard, form clean. Easy 15 → add load.
-        </p>
         <TagFilterBar value={activeTag} onChange={setTag} />
         <p className="text-[12px] text-muted-foreground">
           {filtered.length} exercise{filtered.length === 1 ? "" : "s"}

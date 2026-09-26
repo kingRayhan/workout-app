@@ -17,8 +17,10 @@ function CatalogTabs() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const tab = searchParams.get("tab") === "machines" ? "machines" : "exercises";
+  const focusExerciseId = searchParams.get("exercise");
   const rawTag = searchParams.get("tag");
-  const tag = isMuscleTag(rawTag) ? rawTag : null;
+  const tag =
+    focusExerciseId || !isMuscleTag(rawTag) ? null : rawTag;
   const urlQuery = searchParams.get("q") ?? "";
   const [draft, setDraft] = useState(urlQuery);
   const totalExercises = allCatalogExercises().length;
@@ -28,7 +30,12 @@ function CatalogTabs() {
   }, [urlQuery]);
 
   const replaceParams = useCallback(
-    (next: { tab?: string; tag?: string | null; q?: string | null }) => {
+    (next: {
+      tab?: string;
+      tag?: string | null;
+      q?: string | null;
+      exercise?: string | null;
+    }) => {
       const params = new URLSearchParams(searchParams.toString());
       const nextTab = next.tab ?? tab;
       if (nextTab === "machines") params.set("tab", "machines");
@@ -36,6 +43,7 @@ function CatalogTabs() {
 
       if (nextTab === "machines") {
         params.delete("tag");
+        params.delete("exercise");
       } else if (next.tag === null) {
         params.delete("tag");
       } else if (next.tag !== undefined) {
@@ -46,6 +54,11 @@ function CatalogTabs() {
         const q = next.q?.trim() ?? "";
         if (q) params.set("q", q);
         else params.delete("q");
+      }
+
+      if (next.exercise !== undefined) {
+        if (next.exercise) params.set("exercise", next.exercise);
+        else params.delete("exercise");
       }
 
       const qs = params.toString();
@@ -107,6 +120,7 @@ function CatalogTabs() {
             embedded
             tag={tag}
             query={draft}
+            focusExerciseId={focusExerciseId}
             onTagChange={(next) => replaceParams({ tag: next })}
           />
         </TabsContent>

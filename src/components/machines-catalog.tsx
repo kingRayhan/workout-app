@@ -43,7 +43,7 @@ export function MachineRow({
             src={machine.image}
             alt=""
             fill
-            className="object-cover"
+            className="object-contain p-0.5"
             sizes="56px"
           />
         </span>
@@ -71,7 +71,7 @@ export function MachineRow({
               src={machine.image}
               alt={machine.name}
               fill
-              className="object-cover"
+              className="object-contain p-2"
               sizes="400px"
             />
           </div>
@@ -107,7 +107,7 @@ export function MachineRow({
               {machine.usedBy.map((id) => (
                 <li key={id}>
                   <Link
-                    href="/catalog?tab=exercises"
+                    href={`/catalog?exercise=${encodeURIComponent(id)}`}
                     className="inline-flex rounded-lg bg-muted px-2.5 py-1.5 text-[13px] font-medium text-foreground active:bg-muted/80"
                   >
                     {exerciseName(id)}

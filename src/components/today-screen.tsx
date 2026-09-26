@@ -13,6 +13,7 @@ import { catalogExerciseName } from "@/lib/catalog";
 import { WEEKDAY_LABELS } from "@/lib/dates";
 import { setExerciseDone } from "@/lib/user-data";
 import { cn } from "@/lib/utils";
+import { BookOpen } from "lucide-react";
 
 export function TodayScreen() {
   const { user, loading: authLoading } = useAuth();
@@ -40,6 +41,26 @@ export function TodayScreen() {
   const total = workout?.exerciseIds.length ?? 0;
   const showDataSkeleton = authLoading || (Boolean(user) && loading);
 
+  const firstName = user?.displayName?.trim().split(/\s+/)[0];
+  const hour = new Date().getHours();
+  const timeGreeting =
+    hour < 5 ? "Late night" : hour < 12 ? "Good morning" : hour < 18 ? "Good afternoon" : "Good evening";
+
+  const headerTitle =
+    user && firstName ? `${timeGreeting}, ${firstName}` : "Today";
+
+  const statusLine = !user
+    ? `${weekdayLong} · ${dateLabel}`
+    : loading
+      ? `${weekdayLong} · ${dateLabel}`
+      : !workout
+        ? `Rest day · ${weekdayLong}`
+        : total === 0
+          ? `${weekdayLong} · ${dateLabel}`
+          : doneCount === total
+            ? `All ${total} done for ${weekdayLong} 🎉`
+            : `${doneCount}/${total} done · ${weekdayLong}`;
+
   async function toggle(exerciseId: string, next: boolean) {
     if (!user) return;
     try {
@@ -56,7 +77,7 @@ export function TodayScreen() {
 
   return (
     <div className="flex flex-col pb-4">
-      <AppHeader title="Today" subtitle={`${weekdayLong} · ${dateLabel}`} />
+      <AppHeader title={headerTitle} subtitle={statusLine} />
 
       <div className="flex flex-col gap-3 px-4 pt-1">
         {showDataSkeleton ? <TodolistSkeleton /> : null}
@@ -111,15 +132,18 @@ export function TodayScreen() {
             <ul className="border-t border-border/80">
               {workout.exerciseIds.map((id) => {
                 const checked = doneIds.has(id);
+                const name = catalogExerciseName(id);
                 return (
                   <li
                     key={id}
-                    className="border-b border-border/60 last:border-b-0"
+                    className={cn(
+                      "flex min-h-12 items-center gap-2 border-b border-border/60 last:border-b-0",
+                      checked && "bg-primary/8",
+                    )}
                   >
                     <label
                       className={cn(
-                        "flex min-h-12 cursor-pointer items-center gap-3 px-4 py-2.5 active:bg-muted/60",
-                        checked && "bg-primary/8",
+                        "flex min-h-12 min-w-0 flex-1 cursor-pointer items-center gap-3 py-2.5 pl-4 active:bg-muted/60",
                       )}
                     >
                       <Checkbox
@@ -129,13 +153,20 @@ export function TodayScreen() {
                       />
                       <span
                         className={cn(
-                          "flex-1 text-[15px] font-medium leading-snug",
+                          "min-w-0 flex-1 text-[15px] font-medium leading-snug",
                           checked && "text-muted-foreground line-through",
                         )}
                       >
-                        {catalogExerciseName(id)}
+                        {name}
                       </span>
                     </label>
+                    <Link
+                      href={`/catalog?exercise=${encodeURIComponent(id)}`}
+                      aria-label={`Look up ${name}`}
+                      className="mr-2 flex size-10 shrink-0 items-center justify-center rounded-lg text-muted-foreground active:bg-muted active:text-primary"
+                    >
+                      <BookOpen className="size-4" aria-hidden />
+                    </Link>
                   </li>
                 );
               })}
