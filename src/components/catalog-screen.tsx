@@ -1,12 +1,12 @@
 "use client";
 
-import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
-import { Suspense, useCallback } from "react";
+import { Suspense, useCallback, useEffect, useState } from "react";
 import { CatalogSkeleton } from "@/components/skeletons";
 import { AppHeader } from "@/components/app-header";
 import { MachinesCatalog } from "@/components/machines-catalog";
 import { WorkoutCatalog } from "@/components/workout-catalog";
+import { Input } from "@/components/ui/input";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { PLAN_META } from "@/data/plan";
 import { MACHINES } from "@/data/machines";
@@ -19,10 +19,16 @@ function CatalogTabs() {
   const tab = searchParams.get("tab") === "machines" ? "machines" : "exercises";
   const rawTag = searchParams.get("tag");
   const tag = isMuscleTag(rawTag) ? rawTag : null;
+  const urlQuery = searchParams.get("q") ?? "";
+  const [draft, setDraft] = useState(urlQuery);
   const totalExercises = allCatalogExercises().length;
 
+  useEffect(() => {
+    setDraft(urlQuery);
+  }, [urlQuery]);
+
   const replaceParams = useCallback(
-    (next: { tab?: string; tag?: string | null }) => {
+    (next: { tab?: string; tag?: string | null; q?: string | null }) => {
       const params = new URLSearchParams(searchParams.toString());
       const nextTab = next.tab ?? tab;
       if (nextTab === "machines") params.set("tab", "machines");
@@ -34,6 +40,12 @@ function CatalogTabs() {
         params.delete("tag");
       } else if (next.tag !== undefined) {
         params.set("tag", next.tag);
+      }
+
+      if (next.q !== undefined) {
+        const q = next.q?.trim() ?? "";
+        if (q) params.set("q", q);
+        else params.delete("q");
       }
 
       const qs = params.toString();
@@ -53,22 +65,33 @@ function CatalogTabs() {
         }
       />
 
-      <div className="px-4 pb-3">
-        <Link
-          href="/catalog/search"
-          className="flex h-10 items-center gap-2.5 rounded-xl bg-muted px-3 text-[14px] text-muted-foreground active:bg-muted/80"
-        >
-          <Search className="size-4 shrink-0" aria-hidden />
-          <span>Search exercises &amp; machines</span>
-        </Link>
-      </div>
-
       <Tabs
         value={tab}
         onValueChange={(next) => replaceParams({ tab: next })}
         className="gap-0"
       >
-        <div className="sticky top-[calc(env(safe-area-inset-top)+3.75rem)] z-10 bg-background/95 px-4 pb-2 backdrop-blur-md">
+        <div className="sticky top-[calc(env(safe-area-inset-top)+3.75rem)] z-10 space-y-2 bg-background/95 px-4 pb-2 backdrop-blur-md">
+          <div className="relative">
+            <Search
+              className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground"
+              aria-hidden
+            />
+            <Input
+              type="search"
+              value={draft}
+              onChange={(e) => {
+                const next = e.target.value;
+                setDraft(next);
+                replaceParams({ q: next });
+              }}
+              placeholder="Search exercises & machines"
+              aria-label="Search catalog"
+              className="h-10 rounded-xl bg-muted/80 pl-9 pr-3 text-[15px] dark:bg-muted/80"
+              autoCapitalize="off"
+              autoCorrect="off"
+              enterKeyHint="search"
+            />
+          </div>
           <TabsList className="grid h-10 w-full grid-cols-2 rounded-xl">
             <TabsTrigger value="exercises" className="rounded-lg text-[13px]">
               Exercises
@@ -83,11 +106,12 @@ function CatalogTabs() {
           <WorkoutCatalog
             embedded
             tag={tag}
+            query={draft}
             onTagChange={(next) => replaceParams({ tag: next })}
           />
         </TabsContent>
         <TabsContent value="machines" className="mt-0 outline-none">
-          <MachinesCatalog embedded />
+          <MachinesCatalog embedded query={draft} />
         </TabsContent>
       </Tabs>
     </div>

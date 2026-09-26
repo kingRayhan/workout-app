@@ -2,10 +2,11 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { AppHeader } from "@/components/app-header";
 import { MACHINES, type Machine } from "@/data/machines";
 import { DAYS } from "@/data/plan";
+import { filterMachinesByQuery } from "@/lib/catalog";
 import { cn } from "@/lib/utils";
 import { ChevronDown } from "lucide-react";
 
@@ -121,8 +122,18 @@ export function MachineRow({
   );
 }
 
-export function MachinesCatalog({ embedded = false }: { embedded?: boolean }) {
+export function MachinesCatalog({
+  embedded = false,
+  query = "",
+}: {
+  embedded?: boolean;
+  query?: string;
+}) {
   const [openId, setOpenId] = useState<string | null>(null);
+  const filtered = useMemo(
+    () => filterMachinesByQuery(MACHINES, query),
+    [query],
+  );
 
   useEffect(() => {
     const hash = window.location.hash.replace("#", "");
@@ -135,19 +146,34 @@ export function MachinesCatalog({ embedded = false }: { embedded?: boolean }) {
   }, []);
 
   const list = (
-    <div className="divide-y divide-border/80 border-y border-border/80 bg-card">
-      {MACHINES.map((machine) => (
-        <MachineRow
-          key={machine.id}
-          machine={machine}
-          open={openId === machine.id}
-          onToggle={() =>
-            setOpenId((current) =>
-              current === machine.id ? null : machine.id,
-            )
-          }
-        />
-      ))}
+    <div className="pt-2">
+      {query.trim() ? (
+        <p className="px-4 pb-2 text-[12px] text-muted-foreground">
+          {filtered.length} machine{filtered.length === 1 ? "" : "s"} · “
+          {query.trim()}”
+        </p>
+      ) : null}
+      <div className="divide-y divide-border/80 border-y border-border/80 bg-card">
+        {filtered.map((machine) => (
+          <MachineRow
+            key={machine.id}
+            machine={machine}
+            open={openId === machine.id}
+            onToggle={() =>
+              setOpenId((current) =>
+                current === machine.id ? null : machine.id,
+              )
+            }
+          />
+        ))}
+        {filtered.length === 0 ? (
+          <p className="px-4 py-8 text-center text-[13px] text-muted-foreground">
+            {query.trim()
+              ? `No machines match “${query.trim()}”.`
+              : "No machines."}
+          </p>
+        ) : null}
+      </div>
     </div>
   );
 

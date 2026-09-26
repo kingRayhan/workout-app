@@ -11,6 +11,7 @@ import { EXERCISE_MACHINE, EXERCISE_VIDEO, MEDIA_CREDIT } from "@/data/media";
 import { PLAN_META, type Exercise, type MuscleGroup } from "@/data/plan";
 import {
   allCatalogExercises,
+  filterExercisesByQuery,
   filterExercisesByTag,
   MUSCLE_TAGS,
 } from "@/lib/catalog";
@@ -280,10 +281,12 @@ export function ExerciseRow({
 export function WorkoutCatalog({
   embedded = false,
   tag = null,
+  query = "",
   onTagChange,
 }: {
   embedded?: boolean;
   tag?: MuscleGroup | null;
+  query?: string;
   onTagChange?: (tag: MuscleGroup | null) => void;
 }) {
   const [localTag, setLocalTag] = useState<MuscleGroup | null>(null);
@@ -293,14 +296,14 @@ export function WorkoutCatalog({
   const setTag = onTagChange ?? setLocalTag;
 
   const all = useMemo(() => allCatalogExercises(), []);
-  const filtered = useMemo(
-    () => filterExercisesByTag(all, activeTag),
-    [all, activeTag],
-  );
+  const filtered = useMemo(() => {
+    const byTag = filterExercisesByTag(all, activeTag);
+    return filterExercisesByQuery(byTag, query);
+  }, [all, activeTag, query]);
 
   const body = (
     <>
-      <div className="space-y-2.5 px-4">
+      <div className="space-y-2.5 px-4 pt-2">
         <p className="rounded-lg bg-muted px-3 py-2 text-[12px] leading-snug text-muted-foreground">
           <span className="font-medium text-foreground">Weight:</span> last reps
           hard, form clean. Easy 15 → add load.
@@ -309,6 +312,7 @@ export function WorkoutCatalog({
         <p className="text-[12px] text-muted-foreground">
           {filtered.length} exercise{filtered.length === 1 ? "" : "s"}
           {activeTag ? ` · ${activeTag}` : ""}
+          {query.trim() ? ` · “${query.trim()}”` : ""}
         </p>
       </div>
 
@@ -328,7 +332,9 @@ export function WorkoutCatalog({
         ))}
         {filtered.length === 0 ? (
           <p className="px-4 py-8 text-center text-[13px] text-muted-foreground">
-            No exercises for this tag.
+            {query.trim()
+              ? `No exercises match “${query.trim()}”.`
+              : "No exercises for this tag."}
           </p>
         ) : null}
       </div>

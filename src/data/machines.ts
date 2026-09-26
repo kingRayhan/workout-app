@@ -222,13 +222,13 @@ export const MACHINES: Machine[] = [
   {
     id: "hyperextension",
     name: "Hyperextension bench",
-    aka: "45° back extension / Roman chair",
+    aka: "Low back / lower back extension machine",
     image: "/machines/hyperextension.jpg",
-    howToFind: "Angled bench with thigh pads and ankle hooks. You hinge at the hips.",
+    howToFind: "Seated machine with a pad against your lower back — push back against it. If your gym has an angled Roman-chair style bench instead, that works the same way.",
     setup: [
-      "Hips on the pad, ankles locked in.",
-      "Spine neutral — raise until roughly straight.",
-      "Avoid excessive backward bend.",
+      "Sit with the pad flat against your lower/mid back.",
+      "Hips and knees stay in place — the pad moves, not your legs.",
+      "Push back and extend, pause, return under control.",
     ],
     usedBy: ["hyperextension"],
   },

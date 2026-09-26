@@ -75,17 +75,33 @@ function machineSearchText(machine: Machine): string {
 }
 
 /** Local catalog search across exercises and machines. */
+export function filterExercisesByQuery(
+  exercises: Exercise[],
+  query: string,
+): Exercise[] {
+  const q = query.trim().toLowerCase();
+  if (!q) return exercises;
+  return exercises.filter((e) => matchesQuery(exerciseSearchText(e), q));
+}
+
+export function filterMachinesByQuery(
+  machines: Machine[],
+  query: string,
+): Machine[] {
+  const q = query.trim().toLowerCase();
+  if (!q) return machines;
+  return machines.filter((m) => matchesQuery(machineSearchText(m), q));
+}
+
 export function searchCatalog(query: string): {
   exercises: Exercise[];
   machines: Machine[];
 } {
-  const q = query.trim().toLowerCase();
+  const q = query.trim();
   if (!q) return { exercises: [], machines: [] };
 
   return {
-    exercises: allCatalogExercises().filter((e) =>
-      matchesQuery(exerciseSearchText(e), q),
-    ),
-    machines: MACHINES.filter((m) => matchesQuery(machineSearchText(m), q)),
+    exercises: filterExercisesByQuery(allCatalogExercises(), q),
+    machines: filterMachinesByQuery(MACHINES, q),
   };
 }
