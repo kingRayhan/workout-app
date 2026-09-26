@@ -99,7 +99,7 @@ export function PlanSkeleton() {
 }
 
 export function ActivityHeatmapSkeleton({
-  weeks = 12,
+  weeks = 14,
   compact = false,
   fill = false,
 }: {
@@ -108,8 +108,8 @@ export function ActivityHeatmapSkeleton({
   fill?: boolean;
 }) {
   void compact;
-  const cellGap = "gap-[3px]";
-  const cols = weeks;
+  const cellGap = "gap-[2px]";
+  const cols = Math.min(weeks, 16);
   const monthStarts = new Set(
     Array.from({ length: Math.ceil(cols / 4) }, (_, i) => i * 4).filter(
       (i) => i < cols,
@@ -122,24 +122,17 @@ export function ActivityHeatmapSkeleton({
         {Array.from({ length: cols }, (_, c) => (
           <Fragment key={c}>
             {monthStarts.has(c) && c > 0 ? (
-              <div
-                className={cn("shrink-0", fill ? "w-1.5" : "w-1")}
-                aria-hidden
-              />
+              <div className="w-1.5 shrink-0" aria-hidden />
             ) : null}
-            <div
-              className={cn(
-                "flex flex-col",
-                cellGap,
-                fill ? "min-w-0 flex-1" : "w-3 shrink-0",
-              )}
-            >
+            <div className={cn("flex min-w-0 flex-1 flex-col", cellGap)}>
               {Array.from({ length: 7 }, (_, r) => (
                 <Skeleton
                   key={r}
                   className={cn(
-                    "rounded-[3px] bg-foreground/[0.08]",
-                    fill ? "aspect-square w-full" : "size-3",
+                    "bg-foreground/[0.08]",
+                    fill
+                      ? "h-2.5 w-full min-w-0 rounded-[2px]"
+                      : "size-2.5 rounded-[2px]",
                   )}
                 />
               ))}
@@ -147,21 +140,13 @@ export function ActivityHeatmapSkeleton({
           </Fragment>
         ))}
       </div>
-      <div className={cn("mt-1.5 flex w-full", cellGap)}>
+      <div className={cn("mt-1 flex w-full", cellGap)}>
         {Array.from({ length: cols }, (_, c) => (
           <Fragment key={c}>
             {monthStarts.has(c) && c > 0 ? (
-              <div
-                className={cn("shrink-0", fill ? "w-1.5" : "w-1")}
-                aria-hidden
-              />
+              <div className="w-1.5 shrink-0" aria-hidden />
             ) : null}
-            <div
-              className={cn(
-                "relative h-3 overflow-visible",
-                fill ? "min-w-0 flex-1" : "w-3 shrink-0",
-              )}
-            >
+            <div className="relative h-3.5 min-w-0 flex-1">
               {monthStarts.has(c) ? (
                 <Skeleton className="absolute left-0 top-0 h-2.5 w-6" />
               ) : null}

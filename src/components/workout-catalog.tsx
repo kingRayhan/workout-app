@@ -81,7 +81,7 @@ export function TagFilterBar({
   );
 }
 
-function ExerciseRow({
+export function ExerciseRow({
   exercise,
   index,
   open,

@@ -17,7 +17,7 @@ function exerciseName(id: string): string {
   return id;
 }
 
-function MachineRow({
+export function MachineRow({
   machine,
   open,
   onToggle,

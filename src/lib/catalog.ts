@@ -3,6 +3,7 @@ import {
   type Exercise,
   type MuscleGroup,
 } from "@/data/plan";
+import { MACHINES, type Machine } from "@/data/machines";
 
 const BY_ID = new Map<string, Exercise>();
 for (const day of DAYS) {
@@ -47,4 +48,44 @@ export function filterExercisesByTag(
 ): Exercise[] {
   if (!tag) return exercises;
   return exercises.filter((e) => e.muscles.includes(tag));
+}
+
+function matchesQuery(haystack: string, query: string): boolean {
+  return haystack.toLowerCase().includes(query);
+}
+
+function exerciseSearchText(exercise: Exercise): string {
+  return [
+    exercise.name,
+    exercise.focus,
+    exercise.tip ?? "",
+    exercise.avoid ?? "",
+    ...exercise.muscles,
+    ...exercise.steps,
+  ].join(" ");
+}
+
+function machineSearchText(machine: Machine): string {
+  return [
+    machine.name,
+    machine.aka ?? "",
+    machine.howToFind,
+    ...machine.setup,
+  ].join(" ");
+}
+
+/** Local catalog search across exercises and machines. */
+export function searchCatalog(query: string): {
+  exercises: Exercise[];
+  machines: Machine[];
+} {
+  const q = query.trim().toLowerCase();
+  if (!q) return { exercises: [], machines: [] };
+
+  return {
+    exercises: allCatalogExercises().filter((e) =>
+      matchesQuery(exerciseSearchText(e), q),
+    ),
+    machines: MACHINES.filter((m) => matchesQuery(machineSearchText(m), q)),
+  };
 }

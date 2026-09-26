@@ -117,7 +117,7 @@ export function ActivityReport() {
           <Skeleton className="h-16 rounded-xl" />
           <Skeleton className="h-16 rounded-xl" />
         </div>
-        <ActivityHeatmapSkeleton weeks={13} />
+        <ActivityHeatmapSkeleton weeks={14} />
       </div>
     );
   }
@@ -252,7 +252,7 @@ export function ActivityReport() {
           Light = some checks · Bright = full scheduled workout
         </p>
         {loading ? (
-          <ActivityHeatmapSkeleton weeks={Math.min(activity.weeks, 14)} fill />
+          <ActivityHeatmapSkeleton weeks={Math.min(activity.weeks, 16)} fill />
         ) : (
           <ActivityHeatmapGrid
             keys={activity.keys}

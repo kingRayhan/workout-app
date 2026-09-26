@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Suspense, useCallback } from "react";
 import { CatalogSkeleton } from "@/components/skeletons";
@@ -10,6 +11,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { PLAN_META } from "@/data/plan";
 import { MACHINES } from "@/data/machines";
 import { allCatalogExercises, isMuscleTag } from "@/lib/catalog";
+import { Search } from "lucide-react";
 
 function CatalogTabs() {
   const router = useRouter();
@@ -50,6 +52,16 @@ function CatalogTabs() {
             : `${PLAN_META.sets}×${PLAN_META.reps} · ${totalExercises} exercises`
         }
       />
+
+      <div className="px-4 pb-3">
+        <Link
+          href="/catalog/search"
+          className="flex h-10 items-center gap-2.5 rounded-xl bg-muted px-3 text-[14px] text-muted-foreground active:bg-muted/80"
+        >
+          <Search className="size-4 shrink-0" aria-hidden />
+          <span>Search exercises &amp; machines</span>
+        </Link>
+      </div>
 
       <Tabs
         value={tab}
