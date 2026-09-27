@@ -9,7 +9,8 @@ import { GoogleSignInButton } from "@/components/google-sign-in-button";
 import { TodolistSkeleton } from "@/components/skeletons";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
-import { useTodayTodolist } from "@/hooks/use-user-data";
+import { OnboardingTour } from "@/components/onboarding-tour";
+import { useProfile, useTodayTodolist } from "@/hooks/use-user-data";
 import { useAuth } from "@/lib/auth";
 import {
   IconTile,
@@ -25,7 +26,11 @@ import {
   MUSCLE_TAGS,
 } from "@/lib/catalog";
 import { localDateKey, WEEKDAY_LABELS } from "@/lib/dates";
-import { setExerciseDone } from "@/lib/user-data";
+import {
+  setExerciseDone,
+  setTourStatus,
+  type TourStatus,
+} from "@/lib/user-data";
 import { cn } from "@/lib/utils";
 import {
   BedDouble,
@@ -69,7 +74,7 @@ function DaySwitcher({
   });
 
   return (
-    <div className="flex items-center gap-1">
+    <div data-tour="day-switcher" className="flex items-center gap-1">
       <Button
         variant="ghost"
         size="icon"
@@ -123,6 +128,8 @@ function DaySwitcher({
 
 export function TodayScreen() {
   const { user, loading: authLoading } = useAuth();
+  const { profile, loading: profileLoading } = useProfile();
+  const [tourDismissed, setTourDismissed] = useState(false);
   const [offset, setOffset] = useState(0);
   const selected = useMemo(() => {
     const d = new Date();
@@ -161,6 +168,18 @@ export function TodayScreen() {
     return MUSCLE_TAGS.map((t) => t.id).filter((m) => seen.has(m));
   }, [workout]);
   const showDataSkeleton = authLoading || (Boolean(user) && loading);
+  const showTour =
+    Boolean(user) &&
+    !profileLoading &&
+    !showDataSkeleton &&
+    offset === 0 &&
+    profile.tourStatus === null &&
+    !tourDismissed;
+
+  function finishTour(status: TourStatus) {
+    setTourDismissed(true);
+    if (user) void setTourStatus(user.uid, status).catch(() => {});
+  }
 
   const firstName = user?.displayName?.trim().split(/\s+/)[0];
   const hour = new Date().getHours();
@@ -198,6 +217,7 @@ export function TodayScreen() {
 
   return (
     <div className="flex flex-col pb-4">
+      {showTour ? <OnboardingTour onFinish={finishTour} /> : null}
       <AppHeader title={headerTitle} subtitle={statusLine} />
 
       <div className="flex flex-col gap-3 px-4 pt-1">
@@ -229,7 +249,10 @@ export function TodayScreen() {
         ) : null}
 
         {user && !loading && !workout ? (
-          <section className="animate-rise rounded-2xl bg-muted px-4 py-8 text-center">
+          <section
+            data-tour="rest-day"
+            className="animate-rise rounded-2xl bg-muted px-4 py-8 text-center"
+          >
             <span className="mx-auto mb-3 grid size-12 place-items-center rounded-2xl bg-sky-500/15 text-sky-400">
               <BedDouble className="size-6" aria-hidden />
             </span>
@@ -249,7 +272,10 @@ export function TodayScreen() {
         ) : null}
 
         {user && workout ? (
-          <section className="animate-rise overflow-hidden rounded-2xl bg-card ring-1 ring-border/80">
+          <section
+            data-tour="todolist"
+            className="animate-rise overflow-hidden rounded-2xl bg-card ring-1 ring-border/80"
+          >
             <div className="flex items-start gap-3 px-4 pt-3.5 pb-3">
               <IconTile
                 icon={allDone ? PartyPopper : isFuture ? Eye : ListChecks}
@@ -390,7 +416,10 @@ export function TodayScreen() {
         ) : null}
 
         {user || authLoading ? (
-          <section className="animate-rise rounded-2xl bg-card px-4 py-3.5 ring-1 ring-border/80">
+          <section
+            data-tour="activity"
+            className="animate-rise rounded-2xl bg-card px-4 py-3.5 ring-1 ring-border/80"
+          >
             <div className="flex items-center justify-between gap-2">
               <SectionTitle icon={Flame} tone="lime">
                 Activity

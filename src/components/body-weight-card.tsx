@@ -104,7 +104,10 @@ export function BodyWeightCard({
   }
 
   return (
-    <section className="animate-rise rounded-2xl bg-card px-4 py-3.5 ring-1 ring-border/80">
+    <section
+      data-tour="body-weight"
+      className="animate-rise rounded-2xl bg-card px-4 py-3.5 ring-1 ring-border/80"
+    >
       <div className="flex items-center justify-between gap-2">
         <SectionTitle icon={Scale} tone="amber">
           Body weight

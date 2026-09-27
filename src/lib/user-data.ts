@@ -74,12 +74,19 @@ function profileRef(uid: string) {
   return doc(getFirebaseDb(), "users", uid, "profile", "main");
 }
 
+export type TourStatus = "completed" | "skipped";
+
 export type Profile = {
   heightCm: number | null;
   targetKg: number | null;
+  tourStatus: TourStatus | null;
 };
 
-export const EMPTY_PROFILE: Profile = { heightCm: null, targetKg: null };
+export const EMPTY_PROFILE: Profile = {
+  heightCm: null,
+  targetKg: null,
+  tourStatus: null,
+};
 
 function finiteOrNull(v: unknown) {
   return typeof v === "number" && Number.isFinite(v) ? v : null;
@@ -97,9 +104,25 @@ export function subscribeProfile(
       onData({
         heightCm: finiteOrNull(data.heightCm),
         targetKg: finiteOrNull(data.targetKg),
+        tourStatus:
+          data.tourStatus === "completed" || data.tourStatus === "skipped"
+            ? data.tourStatus
+            : null,
       });
     },
     (err) => onError?.(err),
+  );
+}
+
+/** Pass `null` to show the tour again on the next visit to Today. */
+export async function setTourStatus(uid: string, status: TourStatus | null) {
+  await setDoc(
+    profileRef(uid),
+    {
+      tourStatus: status ?? deleteField(),
+      tourUpdatedAt: serverTimestamp(),
+    },
+    { merge: true },
   );
 }
 

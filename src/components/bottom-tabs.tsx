@@ -46,6 +46,7 @@ export function BottomTabs() {
             <li key={tab.href}>
               <Link
                 href={tab.href}
+                data-tour={`tab-${tab.label.toLowerCase()}`}
                 className={`flex min-h-11 flex-col items-center justify-center gap-0.5 rounded-lg px-1 transition-colors ${
                   active ? "text-primary" : "text-muted-foreground"
                 }`}
