@@ -29,6 +29,15 @@ export const EXERCISE_VIDEO: Record<string, string> = {
   "barbell-curl": `${HD}/barbell-curl.mp4`,
   "preacher-curl": `${HD}/lever-preacher-curl.mp4`,
   "hammer-curl": `${HD}/dumbbell-cross-body-hammer-curl.mp4`,
+  "shoulder-raise-machine": `${HD}/lever-lateral-raise.mp4`,
+  "glute-kickback": `${HD}/lever-standing-rear-kick.mp4`,
+  "smith-machine-squat": `${HD}/smith-chair-squat.mp4`,
+  "triceps-machine-extension": `${HD}/lever-triceps-extension.mp4`,
+  "power-rack-chinup": `${HD}/close-grip-chin-up.mp4`,
+  "biceps-machine-curl": `${HD}/lever-preacher-curl.mp4`,
+  "ab-machine-crunch": `${HD}/lever-seated-crunch-1.mp4`,
+  // Closest HD demo available (no torso-rotation machine clip in source DB)
+  "waist-rotary": `${HD}/cable-twist-up-down.mp4`,
 };
 
 /** @deprecated Prefer EXERCISE_VIDEO — kept so old imports don't break mid-refactor. */
