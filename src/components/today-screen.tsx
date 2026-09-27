@@ -9,6 +9,7 @@ import { GoogleSignInButton } from "@/components/google-sign-in-button";
 import { TodolistSkeleton } from "@/components/skeletons";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
+import { ExerciseDrawer } from "@/components/exercise-drawer";
 import { OnboardingTour } from "@/components/onboarding-tour";
 import { useProfile, useTodayTodolist } from "@/hooks/use-user-data";
 import { useAuth } from "@/lib/auth";
@@ -19,7 +20,7 @@ import {
   TONE_TEXT,
   TONE_TILE,
 } from "@/components/icon-tile";
-import type { MuscleGroup } from "@/data/plan";
+import type { Exercise, MuscleGroup } from "@/data/plan";
 import {
   catalogExerciseName,
   getCatalogExercise,
@@ -130,6 +131,7 @@ export function TodayScreen() {
   const { user, loading: authLoading } = useAuth();
   const { profile, loading: profileLoading } = useProfile();
   const [tourDismissed, setTourDismissed] = useState(false);
+  const [peekExercise, setPeekExercise] = useState<Exercise | null>(null);
   const [offset, setOffset] = useState(0);
   const selected = useMemo(() => {
     const d = new Date();
@@ -218,6 +220,13 @@ export function TodayScreen() {
   return (
     <div className="flex flex-col pb-4">
       {showTour ? <OnboardingTour onFinish={finishTour} /> : null}
+      <ExerciseDrawer
+        exercise={peekExercise}
+        open={peekExercise !== null}
+        onOpenChange={(open) => {
+          if (!open) setPeekExercise(null);
+        }}
+      />
       <AppHeader title={headerTitle} subtitle={statusLine} />
 
       <div className="flex flex-col gap-3 px-4 pt-1">
@@ -392,13 +401,17 @@ export function TodayScreen() {
                         ) : null}
                       </span>
                     </label>
-                    <Link
-                      href={`/catalog?exercise=${encodeURIComponent(id)}`}
+                    <button
+                      type="button"
                       aria-label={`Look up ${name}`}
+                      onClick={() => {
+                        const exercise = getCatalogExercise(id);
+                        if (exercise) setPeekExercise(exercise);
+                      }}
                       className="mr-2 flex size-10 shrink-0 items-center justify-center rounded-lg text-muted-foreground active:bg-muted active:text-primary"
                     >
                       <BookOpen className="size-4" aria-hidden />
-                    </Link>
+                    </button>
                   </li>
                 );
               })}
