@@ -1,19 +1,19 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 import { TagFilterBar } from "@/components/workout-catalog";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import {
-  Sheet,
-  SheetContent,
-  SheetDescription,
-  SheetFooter,
-  SheetHeader,
-  SheetTitle,
-} from "@/components/ui/sheet";
+  Drawer,
+  DrawerContent,
+  DrawerDescription,
+  DrawerFooter,
+  DrawerHeader,
+  DrawerTitle,
+} from "@/components/ui/drawer";
 import type { MuscleGroup } from "@/data/plan";
 import { useAuth } from "@/lib/auth";
 import {
@@ -43,19 +43,17 @@ export function CreateWorkoutSheet({
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  useEffect(() => {
-    if (!open) return;
-    if (workout) {
-      setName(workout.name);
-      setSelected([...workout.exerciseIds]);
-    } else {
-      setName("");
-      setSelected([]);
+  const [prevOpen, setPrevOpen] = useState(false);
+  if (open !== prevOpen) {
+    setPrevOpen(open);
+    if (open) {
+      setName(workout?.name ?? "");
+      setSelected(workout ? [...workout.exerciseIds] : []);
+      setTag(null);
+      setError(null);
+      setSaving(false);
     }
-    setTag(null);
-    setError(null);
-    setSaving(false);
-  }, [open, workout]);
+  }
 
   const selectedSet = useMemo(() => new Set(selected), [selected]);
   const all = useMemo(() => allCatalogExercises(), []);
@@ -100,27 +98,24 @@ export function CreateWorkoutSheet({
   }
 
   return (
-    <Sheet
+    <Drawer
       open={open}
       onOpenChange={(next) => {
         if (!next) reset();
         onOpenChange(next);
       }}
     >
-      <SheetContent
-        side="bottom"
-        className="mx-auto max-h-[90dvh] w-full max-w-[430px] gap-0 rounded-t-2xl p-0"
-      >
-        <SheetHeader className="border-b border-border/80">
-          <SheetTitle className="text-[17px] font-semibold">
+      <DrawerContent className="mx-auto w-full max-w-[430px] data-[vaul-drawer-direction=bottom]:max-h-[90dvh]">
+        <DrawerHeader className="border-b border-border/80 text-left group-data-[vaul-drawer-direction=bottom]/drawer-content:text-left">
+          <DrawerTitle className="text-[17px] font-semibold">
             {isEdit ? "Edit workout" : "New workout"}
-          </SheetTitle>
-          <SheetDescription>
+          </DrawerTitle>
+          <DrawerDescription>
             {isEdit
-              ? "Update the name or exercises."
+              ? "Update the name or exercises. Reorder from the workout sheet."
               : "Name it, filter by tag, then pick exercises."}
-          </SheetDescription>
-        </SheetHeader>
+          </DrawerDescription>
+        </DrawerHeader>
 
         <div className="min-h-0 flex-1 space-y-4 overflow-y-auto px-4 py-4">
           <div className="space-y-1.5">
@@ -177,7 +172,7 @@ export function CreateWorkoutSheet({
           ) : null}
         </div>
 
-        <SheetFooter className="border-t border-border/80">
+        <DrawerFooter className="border-t border-border/80">
           <Button
             className="h-11 w-full rounded-xl font-semibold"
             disabled={saving || !name.trim() || selected.length === 0}
@@ -189,8 +184,8 @@ export function CreateWorkoutSheet({
                 ? "Save changes"
                 : "Save workout"}
           </Button>
-        </SheetFooter>
-      </SheetContent>
-    </Sheet>
+        </DrawerFooter>
+      </DrawerContent>
+    </Drawer>
   );
 }

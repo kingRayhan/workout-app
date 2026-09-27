@@ -9,6 +9,7 @@ Product docs for the Workoutland mobile-first gym companion.
 | [Data model](./srs/data-model.md) | Firestore collections & entity relationships |
 | [User flows](./srs/user-flows.md) | Primary screens and flows on small displays |
 | [Open decisions](./srs/open-decisions.md) | Defaults vs still-open product choices |
+| [Demo data](./demo-data.md) | Seeding the demo account with weigh-ins and workout checks |
 
 **Product name:** Workoutland  
 **Platform target:** Mobile web / PWA-style UI (small display first)  

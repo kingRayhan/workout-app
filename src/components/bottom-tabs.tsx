@@ -25,7 +25,7 @@ const TABS = [
   {
     href: "/you",
     label: "You",
-    match: (p: string) => p.startsWith("/you"),
+    match: (p: string) => p.startsWith("/you") || p.startsWith("/report"),
     icon: YouIcon,
   },
 ] as const;

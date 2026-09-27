@@ -13,15 +13,99 @@ import {
   type WeekdayKey,
 } from "@/lib/dates";
 import {
+  EMPTY_PROFILE,
   emptySchedule,
+  subscribeBodyWeightsInRange,
   subscribeLogsForDate,
   subscribeLogsInRange,
+  subscribeProfile,
   subscribeSchedule,
   subscribeWorkouts,
+  type BodyWeightEntry,
   type ExerciseLog,
+  type Profile,
   type Schedule,
   type Workout,
 } from "@/lib/user-data";
+
+/** Body-weight entries between two date keys (inclusive), oldest first. */
+export function useBodyWeights(startKey: string, endKey: string) {
+  const { user } = useAuth();
+  const [entries, setEntries] = useState<BodyWeightEntry[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (!user) {
+      setEntries([]);
+      setLoading(false);
+      return;
+    }
+    setLoading(true);
+    return subscribeBodyWeightsInRange(
+      user.uid,
+      startKey,
+      endKey,
+      (rows) => {
+        setEntries(rows);
+        setLoading(false);
+        setError(null);
+      },
+      (err) => {
+        setError(err.message);
+        setLoading(false);
+      },
+    );
+  }, [user, startKey, endKey]);
+
+  return { entries, loading, error };
+}
+
+/** Body-weight entry for `date` plus the most recent earlier entry (for the delta). */
+export function useBodyWeight(date: string) {
+  const start = useMemo(() => {
+    const d = parseLocalDateKey(date);
+    d.setDate(d.getDate() - 365);
+    return localDateKey(d);
+  }, [date]);
+  const { entries, loading, error } = useBodyWeights(start, date);
+
+  const current = entries.find((e) => e.date === date) ?? null;
+  const previous =
+    [...entries].reverse().find((e) => e.date < date) ?? null;
+
+  return { current, previous, entries, loading, error };
+}
+
+/** Every body-weight entry the user has logged, oldest first. */
+export function useAllBodyWeights() {
+  return useBodyWeights("0000-01-01", "9999-12-31");
+}
+
+export function useProfile() {
+  const { user } = useAuth();
+  const [profile, setProfile] = useState<Profile>(EMPTY_PROFILE);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    if (!user) {
+      setProfile(EMPTY_PROFILE);
+      setLoading(false);
+      return;
+    }
+    setLoading(true);
+    return subscribeProfile(
+      user.uid,
+      (next) => {
+        setProfile(next);
+        setLoading(false);
+      },
+      () => setLoading(false),
+    );
+  }, [user]);
+
+  return { profile, loading };
+}
 
 export function useWorkouts() {
   const { user } = useAuth();
@@ -83,12 +167,13 @@ export function useSchedule() {
   return { schedule, loading, error };
 }
 
-export function useTodayTodolist() {
+/** Todolist for `dateKey` (defaults to today). */
+export function useTodayTodolist(dateKey?: string) {
   const { user } = useAuth();
   const { workouts, loading: workoutsLoading } = useWorkouts();
   const { schedule, loading: scheduleLoading } = useSchedule();
-  const date = localDateKey();
-  const day = weekdayKey();
+  const date = dateKey ?? localDateKey();
+  const day = weekdayKey(parseLocalDateKey(date));
   const [logs, setLogs] = useState<ExerciseLog[]>([]);
   const [logsLoading, setLogsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);

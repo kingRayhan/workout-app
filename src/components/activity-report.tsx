@@ -3,6 +3,7 @@
 import { useMemo, useState } from "react";
 import { ActivityHeatmapGrid } from "@/components/activity-heatmap";
 import { ActivityHeatmapSkeleton } from "@/components/skeletons";
+import { WeightReport } from "@/components/weight-report";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -232,6 +233,8 @@ export function ActivityReport() {
           />
         </div>
       )}
+
+      <WeightReport start={start} end={end} />
 
       <div>
         <h3 className="text-[12px] font-semibold text-foreground">

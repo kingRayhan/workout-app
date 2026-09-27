@@ -1,6 +1,7 @@
 import {
   collection,
   deleteDoc,
+  deleteField,
   doc,
   onSnapshot,
   orderBy,
@@ -63,6 +64,122 @@ function logsCol(uid: string) {
 
 function logRef(uid: string, date: string, exerciseId: string) {
   return doc(getFirebaseDb(), "users", uid, "logs", `${date}_${exerciseId}`);
+}
+
+function bodyWeightsCol(uid: string) {
+  return collection(getFirebaseDb(), "users", uid, "bodyWeights");
+}
+
+function profileRef(uid: string) {
+  return doc(getFirebaseDb(), "users", uid, "profile", "main");
+}
+
+export type Profile = {
+  heightCm: number | null;
+  targetKg: number | null;
+};
+
+export const EMPTY_PROFILE: Profile = { heightCm: null, targetKg: null };
+
+function finiteOrNull(v: unknown) {
+  return typeof v === "number" && Number.isFinite(v) ? v : null;
+}
+
+export function subscribeProfile(
+  uid: string,
+  onData: (profile: Profile) => void,
+  onError?: (err: Error) => void,
+): Unsubscribe {
+  return onSnapshot(
+    profileRef(uid),
+    (snap) => {
+      const data = snap.exists() ? snap.data() : {};
+      onData({
+        heightCm: finiteOrNull(data.heightCm),
+        targetKg: finiteOrNull(data.targetKg),
+      });
+    },
+    (err) => onError?.(err),
+  );
+}
+
+export async function setTargetKg(uid: string, kg: number | null) {
+  if (kg !== null && (!Number.isFinite(kg) || kg < 20 || kg > 400)) {
+    throw new Error("Enter a target between 20 and 400 kg.");
+  }
+  await setDoc(
+    profileRef(uid),
+    {
+      targetKg: kg === null ? deleteField() : Math.round(kg * 10) / 10,
+      updatedAt: serverTimestamp(),
+    },
+    { merge: true },
+  );
+}
+
+export async function setHeightCm(uid: string, heightCm: number) {
+  if (!Number.isFinite(heightCm) || heightCm < 100 || heightCm > 250) {
+    throw new Error("Enter a height between 100 and 250 cm.");
+  }
+  await setDoc(
+    profileRef(uid),
+    { heightCm: Math.round(heightCm), updatedAt: serverTimestamp() },
+    { merge: true },
+  );
+}
+
+export type BodyWeightEntry = {
+  date: string;
+  kg: number;
+};
+
+export function subscribeBodyWeightsInRange(
+  uid: string,
+  startDate: string,
+  endDate: string,
+  onData: (entries: BodyWeightEntry[]) => void,
+  onError?: (err: Error) => void,
+): Unsubscribe {
+  const q = query(
+    bodyWeightsCol(uid),
+    where("date", ">=", startDate),
+    where("date", "<=", endDate),
+  );
+  return onSnapshot(
+    q,
+    (snap) => {
+      const entries = snap.docs
+        .map((d) => {
+          const data = d.data();
+          return { date: String(data.date ?? d.id), kg: Number(data.kg) };
+        })
+        .filter((e) => Number.isFinite(e.kg))
+        .sort((a, b) => a.date.localeCompare(b.date));
+      onData(entries);
+    },
+    (err) => onError?.(err),
+  );
+}
+
+/** Pass `null` to clear the entry for that day. */
+export async function setBodyWeight(
+  uid: string,
+  date: string,
+  kg: number | null,
+) {
+  const ref = doc(bodyWeightsCol(uid), date);
+  if (kg === null) {
+    await deleteDoc(ref);
+    return;
+  }
+  if (!Number.isFinite(kg) || kg < 20 || kg > 400) {
+    throw new Error("Enter a weight between 20 and 400 kg.");
+  }
+  await setDoc(ref, {
+    date,
+    kg: Math.round(kg * 10) / 10,
+    updatedAt: serverTimestamp(),
+  });
 }
 
 export function subscribeWorkouts(

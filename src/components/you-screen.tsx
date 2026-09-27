@@ -3,11 +3,12 @@
 import { ActivityReport } from "@/components/activity-report";
 import { AppHeader } from "@/components/app-header";
 import { GoogleSignInButton } from "@/components/google-sign-in-button";
+import { ProfileCard } from "@/components/profile-card";
 import { AccountRowSkeleton } from "@/components/skeletons";
 import { useAuth } from "@/lib/auth";
 
 export function YouScreen() {
-  const { loading } = useAuth();
+  const { user, loading } = useAuth();
 
   return (
     <div className="flex flex-col pb-4">
@@ -20,6 +21,8 @@ export function YouScreen() {
             {loading ? <AccountRowSkeleton /> : <GoogleSignInButton />}
           </div>
         </section>
+
+        {user ? <ProfileCard /> : null}
 
         <section className="rounded-2xl bg-card px-4 py-4 ring-1 ring-border/80">
           <h2 className="text-[13px] font-semibold">Report</h2>

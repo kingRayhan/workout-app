@@ -6,6 +6,8 @@ import { AppHeader } from "@/components/app-header";
 import { CreateWorkoutSheet } from "@/components/create-workout-sheet";
 import { GoogleSignInButton } from "@/components/google-sign-in-button";
 import { ScheduleDaySheet } from "@/components/schedule-day-sheet";
+import { WorkoutDrawer } from "@/components/workout-drawer";
+import { ChevronRight } from "lucide-react";
 import { PlanSkeleton } from "@/components/skeletons";
 import {
   AlertDialog,
@@ -35,6 +37,8 @@ export function PlanScreen() {
   const { schedule, loading: scheduleLoading } = useSchedule();
   const [createOpen, setCreateOpen] = useState(false);
   const [editing, setEditing] = useState<Workout | null>(null);
+  const [detailId, setDetailId] = useState<string | null>(null);
+  const detailWorkout = workouts.find((w) => w.id === detailId) ?? null;
   const [scheduleDay, setScheduleDayState] = useState<WeekdayKey | null>(null);
   const [deleteId, setDeleteId] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
@@ -76,6 +80,7 @@ export function PlanScreen() {
     try {
       await deleteWorkoutAndUnschedule(user.uid, schedule, deleteId);
       setDeleteId(null);
+      setDetailId(null);
     } catch (err) {
       setBanner(err instanceof Error ? err.message : "Couldn’t delete.");
     } finally {
@@ -144,43 +149,35 @@ export function PlanScreen() {
                 </div>
               ) : (
                 <ul className="mt-2">
-                  {workouts.map((w, i) => (
-                    <li key={w.id}>
-                      {i > 0 ? <Separator className="my-1" /> : null}
-                      <div className="flex min-h-12 items-center justify-between gap-2 py-1">
+                  {workouts.map((w, i) => {
+                    const days = WEEKDAY_KEYS.filter((d) => schedule[d] === w.id);
+                    return (
+                      <li key={w.id}>
+                        {i > 0 ? <Separator className="my-1" /> : null}
                         <button
                           type="button"
-                          className="min-w-0 flex-1 text-left active:opacity-80"
-                          onClick={() => setEditing(w)}
+                          className="-mx-2 flex min-h-12 w-[calc(100%+1rem)] items-center gap-2 rounded-xl px-2 py-1.5 text-left active:bg-muted/60"
+                          onClick={() => setDetailId(w.id)}
                         >
-                          <p className="truncate text-[15px] font-medium">
-                            {w.name}
-                          </p>
-                          <p className="text-[12px] text-muted-foreground">
-                            {w.exerciseIds.length} exercises
-                          </p>
+                          <span className="min-w-0 flex-1">
+                            <span className="block truncate text-[15px] font-medium">
+                              {w.name}
+                            </span>
+                            <span className="block text-[12px] text-muted-foreground">
+                              {w.exerciseIds.length} exercises
+                              {days.length
+                                ? ` · ${days.map((d) => WEEKDAY_LABELS[d]).join(", ")}`
+                                : ""}
+                            </span>
+                          </span>
+                          <ChevronRight
+                            className="size-4 shrink-0 text-muted-foreground"
+                            aria-hidden
+                          />
                         </button>
-                        <div className="flex shrink-0 items-center">
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            className="text-muted-foreground"
-                            onClick={() => setEditing(w)}
-                          >
-                            Edit
-                          </Button>
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            className="text-muted-foreground"
-                            onClick={() => setDeleteId(w.id)}
-                          >
-                            Delete
-                          </Button>
-                        </div>
-                      </div>
-                    </li>
-                  ))}
+                      </li>
+                    );
+                  })}
                   <li className="pt-2">
                     <Button
                       variant="outline"
@@ -239,6 +236,19 @@ export function PlanScreen() {
         </Link>
       </div>
 
+      <WorkoutDrawer
+        workout={detailWorkout}
+        schedule={schedule}
+        open={detailWorkout !== null}
+        onOpenChange={(open) => {
+          if (!open) setDetailId(null);
+        }}
+        onEdit={(w) => {
+          setDetailId(null);
+          setEditing(w);
+        }}
+        onDelete={(w) => setDeleteId(w.id)}
+      />
       <CreateWorkoutSheet
         key={editing?.id ?? "new"}
         open={createOpen || editing !== null}
