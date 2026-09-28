@@ -32,6 +32,7 @@ import {
 import { useMemo, useState } from "react";
 import { ExerciseSettingsEditor } from "@/components/exercise-settings-editor";
 import {
+  IconImage,
   IconTile,
   MUSCLE_STYLE,
   TONE_TEXT,
@@ -260,7 +261,6 @@ export function WorkoutDrawer({
                 <div className="mt-1.5 flex flex-wrap gap-1">
                   {muscles.map((m) => {
                     const style = MUSCLE_STYLE[m];
-                    const Icon = style.icon;
                     return (
                       <span
                         key={m}
@@ -269,7 +269,7 @@ export function WorkoutDrawer({
                           TONE_TILE[style.tone],
                         )}
                       >
-                        <Icon className="size-3" aria-hidden />
+                        <IconImage icon={style.icon} className="size-3.5" />
                         {style.label}
                       </span>
                     );

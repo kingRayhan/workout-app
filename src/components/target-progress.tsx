@@ -1,5 +1,6 @@
 import { Target } from "lucide-react";
 import Link from "next/link";
+import { IconImage } from "@/components/icon-tile";
 import { round1 } from "@/lib/units";
 import { cn } from "@/lib/utils";
 
@@ -27,7 +28,7 @@ export function TargetProgress({
           className,
         )}
       >
-        <Target className="size-3.5 text-primary" aria-hidden />
+        <IconImage icon={Target} className="size-4" />
         <span>
           <span className="font-semibold text-primary">Set a target weight</span>{" "}
           to track progress
@@ -57,7 +58,7 @@ export function TargetProgress({
     >
       <div className="flex items-center justify-between gap-2 text-[12px]">
         <span className="flex items-center gap-1.5 text-muted-foreground">
-          <Target className="size-3.5 text-primary" aria-hidden />
+          <IconImage icon={Target} className="size-4" />
           Target{" "}
           <span className="font-semibold text-foreground tabular-nums">
             {targetKg} kg

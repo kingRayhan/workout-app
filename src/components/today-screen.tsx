@@ -41,6 +41,7 @@ import { OnboardingTour } from "@/components/onboarding-tour";
 import { useProfile, useTodayTodolist } from "@/hooks/use-user-data";
 import { useAuth } from "@/lib/auth";
 import {
+  IconImage,
   IconTile,
   MUSCLE_STYLE,
   SectionTitle,
@@ -312,7 +313,6 @@ function ChecklistCard({
             <div className="mt-2 flex flex-wrap gap-1">
               {muscles.map((m) => {
                 const style = MUSCLE_STYLE[m];
-                const Icon = style.icon;
                 return (
                   <span
                     key={m}
@@ -321,7 +321,7 @@ function ChecklistCard({
                       TONE_TILE[style.tone],
                     )}
                   >
-                    <Icon className="size-3" aria-hidden />
+                    <IconImage icon={style.icon} className="size-3.5" />
                     {style.label}
                   </span>
                 );
@@ -693,9 +693,7 @@ export function TodayScreen() {
               dailyWorkout ? "py-5" : "py-8",
             )}
           >
-            <span className="mx-auto mb-3 grid size-12 place-items-center rounded-2xl bg-sky-500/15 text-sky-400">
-              <BedDouble className="size-6" aria-hidden />
-            </span>
+            <IconImage icon={BedDouble} className="mx-auto mb-3 size-12" />
             <p className="text-[17px] font-semibold tracking-tight">
               Rest day
             </p>
@@ -763,7 +761,7 @@ export function TodayScreen() {
                 href="/you"
                 className="flex items-center gap-1 text-[12px] font-semibold text-primary"
               >
-                <ChartColumn className="size-3.5" aria-hidden />
+                <IconImage icon={ChartColumn} className="size-4" />
                 Report
               </Link>
             </div>

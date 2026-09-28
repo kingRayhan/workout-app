@@ -1,6 +1,7 @@
 "use client";
 
 import { Target } from "lucide-react";
+import { IconImage } from "@/components/icon-tile";
 import { useState } from "react";
 import { BMI_PILL } from "@/components/bmi-gauge";
 import { Button } from "@/components/ui/button";
@@ -78,7 +79,7 @@ export function TargetWeightCard({
     <section className="rounded-2xl bg-card px-4 py-4 ring-1 ring-border/80">
       <div className="flex items-center justify-between gap-2">
         <h2 className="flex items-center gap-2 text-[15px] font-semibold">
-          <Target className="size-4 text-primary" aria-hidden />
+          <IconImage icon={Target} className="size-5" />
           Target weight
         </h2>
         {!editing ? (

@@ -1,4 +1,4 @@
-import type { LucideIcon } from "lucide-react";
+import Image from "next/image";
 import type { ReactNode } from "react";
 import {
   BicepsFlexed,
@@ -9,9 +9,68 @@ import {
   Mountain,
   Shield,
   Zap,
+  type LucideIcon,
 } from "lucide-react";
 import type { MuscleGroup } from "@/data/plan";
 import { cn } from "@/lib/utils";
+
+/** Transparent 3D icons, keyed by the lucide component's display name. */
+const ICON_SRC: Record<string, string> = {
+  Dumbbell: "/shortcuts/exercise.png",
+  Scale: "/shortcuts/weight.png",
+  BookOpen: "/shortcuts/catalog.png",
+  ChartColumn: "/shortcuts/report.png",
+  Flame: "/icons/flame.png",
+  LogIn: "/icons/login.png",
+  ListChecks: "/icons/checklist.png",
+  PartyPopper: "/icons/party.png",
+  Eye: "/icons/eye.png",
+  Repeat: "/icons/repeat.png",
+  Footprints: "/icons/footprints.png",
+  Shield: "/icons/shield.png",
+  Mountain: "/icons/mountain.png",
+  BicepsFlexed: "/icons/biceps.png",
+  Zap: "/icons/bolt.png",
+  CircleDot: "/icons/core.png",
+  HeartPulse: "/icons/heart.png",
+  BedDouble: "/icons/bed.png",
+  Compass: "/icons/compass.png",
+  Target: "/icons/target.png",
+  Sparkles: "/icons/sparkles.png",
+  CalendarRange: "/icons/calendar.png",
+  UserRound: "/icons/user.png",
+  Rocket: "/icons/rocket.png",
+  Check: "/icons/check.png",
+  Search: "/icons/search.png",
+};
+
+function srcFor(icon: LucideIcon) {
+  return ICON_SRC[icon.displayName ?? ""];
+}
+
+export function IconImage({
+  icon,
+  className,
+}: {
+  icon: LucideIcon;
+  className?: string;
+}) {
+  const src = srcFor(icon);
+  if (!src) {
+    const Glyph = icon;
+    return <Glyph className={className} aria-hidden />;
+  }
+  return (
+    <Image
+      src={src}
+      alt=""
+      width={128}
+      height={128}
+      aria-hidden
+      className={cn("shrink-0 object-contain", className)}
+    />
+  );
+}
 
 export type Tone =
   | "lime"
@@ -76,6 +135,24 @@ export function IconTile({
   size?: "sm" | "md";
   className?: string;
 }) {
+  const src = srcFor(Icon);
+  if (src) {
+    return (
+      <Image
+        src={src}
+        alt=""
+        width={128}
+        height={128}
+        aria-hidden
+        className={cn(
+          "shrink-0 object-contain",
+          size === "sm" ? "size-7" : "size-8",
+          className,
+        )}
+      />
+    );
+  }
+
   return (
     <span
       className={cn(

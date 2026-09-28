@@ -12,6 +12,7 @@ import { PLAN_META } from "@/data/plan";
 import { MACHINES } from "@/data/machines";
 import { allCatalogExercises, isMuscleTag } from "@/lib/catalog";
 import { Search } from "lucide-react";
+import { IconImage } from "@/components/icon-tile";
 
 function CatalogTabs() {
   const router = useRouter();
@@ -85,9 +86,9 @@ function CatalogTabs() {
       >
         <div className="sticky top-[calc(env(safe-area-inset-top)+3.75rem)] z-10 space-y-2 bg-background/95 px-4 pb-2 backdrop-blur-md">
           <div className="relative">
-            <Search
-              className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground"
-              aria-hidden
+            <IconImage
+              icon={Search}
+              className="pointer-events-none absolute left-2.5 top-1/2 size-5 -translate-y-1/2"
             />
             <Input
               type="search"

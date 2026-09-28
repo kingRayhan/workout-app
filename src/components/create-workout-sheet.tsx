@@ -2,6 +2,7 @@
 
 import { Search } from "lucide-react";
 import { useMemo, useState } from "react";
+import { IconImage } from "@/components/icon-tile";
 import { TagFilterBar } from "@/components/workout-catalog";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -141,9 +142,9 @@ export function CreateWorkoutSheet({
             </p>
             <div className="sticky top-0 z-10 -mx-4 space-y-2 bg-popover px-4 pb-2">
               <div className="relative">
-                <Search
-                  className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground"
-                  aria-hidden
+                <IconImage
+                  icon={Search}
+                  className="pointer-events-none absolute left-2.5 top-1/2 size-5 -translate-y-1/2"
                 />
                 <Input
                   type="search"

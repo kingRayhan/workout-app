@@ -18,7 +18,7 @@ import { AppHeader } from "@/components/app-header";
 import { ExerciseDrawer } from "@/components/exercise-drawer";
 import { ExerciseWeightChart } from "@/components/exercise-weight-chart";
 import { GoogleSignInButton } from "@/components/google-sign-in-button";
-import { IconTile, MUSCLE_STYLE } from "@/components/icon-tile";
+import { IconImage, IconTile, MUSCLE_STYLE } from "@/components/icon-tile";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -514,9 +514,9 @@ function LogFilters({
     <div className="sticky top-[calc(env(safe-area-inset-top)+3.75rem)] z-10 -mx-4 space-y-2 bg-background/95 px-4 pb-2 backdrop-blur-md">
       {showSearch ? (
         <div className="relative">
-          <Search
-            className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground"
-            aria-hidden
+          <IconImage
+            icon={Search}
+            className="pointer-events-none absolute left-2.5 top-1/2 size-5 -translate-y-1/2"
           />
           <Input
             type="search"

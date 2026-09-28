@@ -5,7 +5,7 @@ import { AppHeader } from "@/components/app-header";
 import { GoogleSignInButton } from "@/components/google-sign-in-button";
 import { ProfileCard } from "@/components/profile-card";
 import { AccountRowSkeleton } from "@/components/skeletons";
-import { IconTile } from "@/components/icon-tile";
+import { IconImage, IconTile } from "@/components/icon-tile";
 import { EXERCISE_LOG_HREF, WEIGHT_LOG_HREF } from "@/lib/routes";
 import { useAuth } from "@/lib/auth";
 import { setTourStatus } from "@/lib/user-data";
@@ -47,7 +47,7 @@ export function YouScreen() {
               onClick={() => void replayTour()}
               className="mt-3 flex w-full items-center gap-2 rounded-xl bg-muted/60 px-3 py-2.5 text-left text-[13px] active:bg-muted disabled:opacity-60"
             >
-              <Compass className="size-4 text-primary" aria-hidden />
+              <IconImage icon={Compass} className="size-5" />
               <span className="flex-1 font-medium">Replay app tour</span>
               <ChevronRight className="size-4 text-muted-foreground" aria-hidden />
             </button>
