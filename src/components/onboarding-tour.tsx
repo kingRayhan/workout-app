@@ -57,7 +57,7 @@ const STEPS: Step[] = [
     tone: "lime",
     title: "2 · Your daily todolist",
     body: "Today shows the workout scheduled for this weekday. Check exercises off as you go.",
-    tips: ["Tap the book icon on a row for form cues", "Colors show which muscle each move hits"],
+    tips: ["Tap a row to log it and see form cues", "Colors show which muscle each move hits"],
   },
   {
     targets: ["day-switcher"],

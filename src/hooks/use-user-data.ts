@@ -16,6 +16,7 @@ import {
   EMPTY_PROFILE,
   emptySchedule,
   subscribeBodyWeightsInRange,
+  subscribeExerciseHistory,
   subscribeLogsForDate,
   subscribeLogsInRange,
   subscribeProfile,
@@ -167,6 +168,67 @@ export function useSchedule() {
   return { schedule, loading, error };
 }
 
+/** Completed logs for one exercise, newest first. */
+export function useExerciseHistory(exerciseId: string | null) {
+  const { user } = useAuth();
+  const key = user && exerciseId ? `${user.uid}:${exerciseId}` : null;
+  const [state, setState] = useState<{ key: string; logs: ExerciseLog[] } | null>(
+    null,
+  );
+
+  useEffect(() => {
+    if (!user || !exerciseId || !key) return;
+    return subscribeExerciseHistory(
+      user.uid,
+      exerciseId,
+      (rows) => setState({ key, logs: rows }),
+      () => setState({ key, logs: [] }),
+    );
+  }, [user, exerciseId, key]);
+
+  const ready = key !== null && state?.key === key;
+  return {
+    logs: ready ? state.logs : [],
+    loading: key !== null && !ready,
+  };
+}
+
+/** Every completed exercise log the user has, oldest first. */
+export function useAllExerciseLogs() {
+  const { user } = useAuth();
+  const key = user?.uid ?? null;
+  const [state, setState] = useState<{
+    key: string;
+    logs: ExerciseLog[];
+    error: string | null;
+  } | null>(null);
+
+  useEffect(() => {
+    if (!user || !key) return;
+    return subscribeLogsInRange(
+      user.uid,
+      "0000-01-01",
+      "9999-12-31",
+      (rows) =>
+        setState({
+          key,
+          logs: rows
+            .filter((l) => l.done && l.exerciseId)
+            .sort((a, b) => a.date.localeCompare(b.date)),
+          error: null,
+        }),
+      (err) => setState({ key, logs: [], error: err.message }),
+    );
+  }, [user, key]);
+
+  const ready = key !== null && state?.key === key;
+  return {
+    logs: ready ? state.logs : [],
+    loading: key !== null && !ready,
+    error: ready ? state.error : null,
+  };
+}
+
 /** Todolist for `dateKey` (defaults to today). */
 export function useTodayTodolist(dateKey?: string) {
   const { user } = useAuth();
@@ -205,6 +267,13 @@ export function useTodayTodolist(dateKey?: string) {
     () => workouts.find((w) => w.id === workoutId) ?? null,
     [workouts, workoutId],
   );
+  // Hidden when it's the same workout as the day's plan.
+  const dailyWorkoutId =
+    schedule.daily && schedule.daily !== workoutId ? schedule.daily : null;
+  const dailyWorkout = useMemo(
+    () => workouts.find((w) => w.id === dailyWorkoutId) ?? null,
+    [workouts, dailyWorkoutId],
+  );
 
   const doneIds = useMemo(() => {
     const set = new Set<string>();
@@ -219,6 +288,7 @@ export function useTodayTodolist(dateKey?: string) {
     weekday: day,
     workout,
     workoutId,
+    dailyWorkout,
     doneIds,
     logs,
     loading: workoutsLoading || scheduleLoading || logsLoading,
@@ -329,8 +399,11 @@ export function useActivity(range: ActivityRangeInput = { months: 3 }) {
         continue;
       }
       const day = weekdayKey(parseLocalDateKey(key)) as WeekdayKey;
-      const wid = schedule[day];
-      const required = wid ? (workoutById.get(wid)?.exerciseIds.length ?? 0) : 0;
+      const ids = new Set<string>();
+      for (const wid of [schedule[day], schedule.daily]) {
+        for (const id of (wid && workoutById.get(wid)?.exerciseIds) || []) ids.add(id);
+      }
+      const required = ids.size;
       if (required > 0 && n >= required) map.set(key, 2);
       else map.set(key, 1);
     }

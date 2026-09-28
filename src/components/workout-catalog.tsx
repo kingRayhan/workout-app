@@ -7,6 +7,7 @@ import { MEDIA_CREDIT } from "@/data/media";
 import { PLAN_META, type Exercise, type MuscleGroup } from "@/data/plan";
 import {
   allCatalogExercises,
+  catalogTargetLabel,
   filterExercisesByQuery,
   filterExercisesByTag,
   MUSCLE_TAGS,
@@ -100,7 +101,7 @@ export function ExerciseRow({
             {exercise.name}
           </span>
           <span className="mt-0.5 block truncate text-[13px] text-muted-foreground">
-            {exercise.sets}×{exercise.reps}
+            {catalogTargetLabel(exercise)}
             <span className="mx-1.5 text-border">·</span>
             {exercise.focus}
           </span>

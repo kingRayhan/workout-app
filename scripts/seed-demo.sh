@@ -1,10 +1,12 @@
 #!/usr/bin/env bash
-# Seed demo data (body weights + workout checks) into Firestore for one user.
+# Seed demo data (body weights, workout checks, lifted weights) into Firestore
+# for one user.
 #
 #   scripts/seed-demo.sh                      # fill last 60d weights, 90d logs
 #   scripts/seed-demo.sh --weight-days 120    # go further back
 #   scripts/seed-demo.sh --include-today      # also fill today
 #   scripts/seed-demo.sh --only logs          # just workout checks
+#   scripts/seed-demo.sh --only lifts         # exercise targets + log weights
 #   scripts/seed-demo.sh --dry-run            # preview, write nothing
 #   scripts/seed-demo.sh --clear              # remove all sample data
 #

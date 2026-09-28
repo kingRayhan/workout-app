@@ -7,7 +7,8 @@ import { CreateWorkoutSheet } from "@/components/create-workout-sheet";
 import { GoogleSignInButton } from "@/components/google-sign-in-button";
 import { ScheduleDaySheet } from "@/components/schedule-day-sheet";
 import { WorkoutDrawer } from "@/components/workout-drawer";
-import { ChevronRight } from "lucide-react";
+import { ChevronRight, Repeat } from "lucide-react";
+import { IconTile } from "@/components/icon-tile";
 import { PlanSkeleton } from "@/components/skeletons";
 import {
   AlertDialog,
@@ -23,13 +24,16 @@ import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import { useSchedule, useWorkouts } from "@/hooks/use-user-data";
 import { useAuth } from "@/lib/auth";
-import { WEEKDAY_KEYS, WEEKDAY_LABELS, type WeekdayKey } from "@/lib/dates";
+import { WEEKDAY_KEYS, WEEKDAY_LABELS } from "@/lib/dates";
 import {
+  createWorkout,
   deleteWorkoutAndUnschedule,
   importTrainerPlan,
   setScheduleDay,
+  type ScheduleSlot,
   type Workout,
 } from "@/lib/user-data";
+import { cn } from "@/lib/utils";
 
 export function PlanScreen() {
   const { user, loading: authLoading } = useAuth();
@@ -39,7 +43,7 @@ export function PlanScreen() {
   const [editing, setEditing] = useState<Workout | null>(null);
   const [detailId, setDetailId] = useState<string | null>(null);
   const detailWorkout = workouts.find((w) => w.id === detailId) ?? null;
-  const [scheduleDay, setScheduleDayState] = useState<WeekdayKey | null>(null);
+  const [scheduleDay, setScheduleDayState] = useState<ScheduleSlot | null>(null);
   const [deleteId, setDeleteId] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
   const [banner, setBanner] = useState<string | null>(null);
@@ -71,6 +75,24 @@ export function PlanScreen() {
       await setScheduleDay(user.uid, scheduleDay, workoutId);
     } catch (err) {
       setBanner(err instanceof Error ? err.message : "Couldn’t update schedule.");
+    }
+  }
+
+  async function onQuickDailyWalk() {
+    if (!user) return;
+    setBusy(true);
+    setBanner(null);
+    try {
+      const id = await createWorkout(user.uid, {
+        name: "Daily walk",
+        exerciseIds: ["treadmill-walk"],
+      });
+      await setScheduleDay(user.uid, "daily", id);
+      setBanner("Daily walk added — it now shows on Today every day.");
+    } catch (err) {
+      setBanner(err instanceof Error ? err.message : "Couldn’t add the daily walk.");
+    } finally {
+      setBusy(false);
     }
   }
 
@@ -150,7 +172,12 @@ export function PlanScreen() {
               ) : (
                 <ul className="mt-2">
                   {workouts.map((w, i) => {
-                    const days = WEEKDAY_KEYS.filter((d) => schedule[d] === w.id);
+                    const days = [
+                      ...(schedule.daily === w.id ? ["Every day"] : []),
+                      ...WEEKDAY_KEYS.filter((d) => schedule[d] === w.id).map(
+                        (d) => WEEKDAY_LABELS[d],
+                      ),
+                    ];
                     return (
                       <li key={w.id}>
                         {i > 0 ? <Separator className="my-1" /> : null}
@@ -165,9 +192,7 @@ export function PlanScreen() {
                             </span>
                             <span className="block text-[12px] text-muted-foreground">
                               {w.exerciseIds.length} exercises
-                              {days.length
-                                ? ` · ${days.map((d) => WEEKDAY_LABELS[d]).join(", ")}`
-                                : ""}
+                              {days.length ? ` · ${days.join(", ")}` : ""}
                             </span>
                           </span>
                           <ChevronRight
@@ -196,9 +221,32 @@ export function PlanScreen() {
               <div className="px-4 py-3">
                 <h2 className="text-[13px] font-semibold">Schedule</h2>
                 <p className="mt-0.5 text-[12px] text-muted-foreground">
-                  Tap a day to assign a workout.
+                  Tap a day to assign a workout. Put daily habits like a
+                  treadmill walk under Every day.
                 </p>
               </div>
+              <Separator />
+              <button
+                type="button"
+                className="flex min-h-14 w-full items-center gap-3 bg-amber-500/5 px-4 py-2 text-left active:bg-muted/60"
+                onClick={() => setScheduleDayState("daily")}
+              >
+                <IconTile icon={Repeat} tone="amber" size="sm" />
+                <span className="min-w-0 flex-1">
+                  <span className="block text-[15px] font-medium">Every day</span>
+                  <span className="block text-[12px] text-muted-foreground">
+                    Shows on Today alongside each day’s workout
+                  </span>
+                </span>
+                <span
+                  className={cn(
+                    "max-w-[40%] truncate text-[13px]",
+                    schedule.daily ? "font-medium text-foreground" : "text-muted-foreground",
+                  )}
+                >
+                  {schedule.daily ? workoutName(schedule.daily) : "None"}
+                </span>
+              </button>
               <Separator />
               <ul>
                 {WEEKDAY_KEYS.map((day, i) => (
@@ -269,6 +317,7 @@ export function PlanScreen() {
         workouts={workouts}
         selectedId={scheduleDay ? schedule[scheduleDay] : null}
         onSelect={(id) => void onSchedulePick(id)}
+        onQuickAdd={() => void onQuickDailyWalk()}
       />
 
       <AlertDialog

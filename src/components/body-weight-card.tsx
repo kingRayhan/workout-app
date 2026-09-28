@@ -22,7 +22,11 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { useBodyWeight, useProfile } from "@/hooks/use-user-data";
 import { useAuth } from "@/lib/auth";
 import { bmi, bmiCategory } from "@/lib/bmi";
-import { localDateKey, parseLocalDateKey } from "@/lib/dates";
+import {
+  localDateKey,
+  parseLocalDateKey,
+  relativeDayLabel,
+} from "@/lib/dates";
 import { setBodyWeight } from "@/lib/user-data";
 import { cn } from "@/lib/utils";
 
@@ -39,19 +43,6 @@ const RECENT_COUNT = 3;
 
 function shortDate(key: string) {
   return parseLocalDateKey(key).toLocaleDateString(undefined, {
-    month: "short",
-    day: "numeric",
-  });
-}
-
-function relativeDate(key: string) {
-  const today = localDateKey();
-  const y = parseLocalDateKey(today);
-  y.setDate(y.getDate() - 1);
-  if (key === today) return "Today";
-  if (key === localDateKey(y)) return "Yesterday";
-  return parseLocalDateKey(key).toLocaleDateString(undefined, {
-    weekday: "short",
     month: "short",
     day: "numeric",
   });
@@ -272,7 +263,7 @@ export function BodyWeightCard({
                     >
                       <span className="flex items-center gap-2 text-muted-foreground">
                         <CalendarDays className="size-3.5" aria-hidden />
-                        {relativeDate(entry.date)}
+                        {relativeDayLabel(entry.date)}
                       </span>
                       <span className="flex items-center gap-2 tabular-nums">
                         {d !== null ? (

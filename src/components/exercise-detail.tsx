@@ -7,6 +7,7 @@ import { getExerciseExtra } from "@/data/exercise-extra";
 import { getMachine } from "@/data/machines";
 import { EXERCISE_MACHINE, EXERCISE_VIDEO } from "@/data/media";
 import type { Exercise } from "@/data/plan";
+import { catalogTargetLabel } from "@/lib/catalog";
 import { cn } from "@/lib/utils";
 
 function SectionLabel({ children }: { children: React.ReactNode }) {
@@ -54,7 +55,7 @@ export function ExerciseDetail({
 
       <div className="flex flex-wrap gap-1.5">
         <Badge variant="secondary" className="rounded-md font-medium">
-          {exercise.sets} × {exercise.reps}
+          {catalogTargetLabel(exercise)}
         </Badge>
         {exercise.muscles.map((m) => (
           <Badge key={m} variant="outline" className="rounded-md capitalize">

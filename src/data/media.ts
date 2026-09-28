@@ -38,6 +38,12 @@ export const EXERCISE_VIDEO: Record<string, string> = {
   "ab-machine-crunch": `${HD}/lever-seated-crunch-1.mp4`,
   // Closest HD demo available (no torso-rotation machine clip in source DB)
   "waist-rotary": `${HD}/cable-twist-up-down.mp4`,
+  // Only a running clip exists in the source DB; used for every treadmill variant
+  "treadmill-walk": `${HD}/treadmill-running.mp4`,
+  "incline-walk": `${HD}/treadmill-running.mp4`,
+  "treadmill-jog": `${HD}/treadmill-running.mp4`,
+  "stationary-bike": `${HD}/stationary-bike.mp4`,
+  elliptical: `${HD}/elliptical.mp4`,
 };
 
 /** @deprecated Prefer EXERCISE_VIDEO — kept so old imports don't break mid-refactor. */

@@ -69,6 +69,20 @@ export function parseLocalDateKey(key: string): Date {
   return new Date(y!, m! - 1, d!);
 }
 
+/** "Today", "Yesterday", or e.g. "Sat, Sep 26". */
+export function relativeDayLabel(key: string): string {
+  const today = localDateKey();
+  const y = parseLocalDateKey(today);
+  y.setDate(y.getDate() - 1);
+  if (key === today) return "Today";
+  if (key === localDateKey(y)) return "Yesterday";
+  return parseLocalDateKey(key).toLocaleDateString(undefined, {
+    weekday: "short",
+    month: "short",
+    day: "numeric",
+  });
+}
+
 /** Inclusive range of local date keys from `start` to `end`. */
 export function dateKeyRange(start: Date, end: Date): string[] {
   const keys: string[] = [];

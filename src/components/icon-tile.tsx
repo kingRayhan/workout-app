@@ -5,6 +5,7 @@ import {
   CircleDot,
   Dumbbell,
   Footprints,
+  HeartPulse,
   Mountain,
   Shield,
   Zap,
@@ -61,6 +62,7 @@ export const MUSCLE_STYLE: Record<
   biceps: { label: "Biceps", icon: BicepsFlexed, tone: "teal" },
   triceps: { label: "Triceps", icon: Zap, tone: "indigo" },
   core: { label: "Core", icon: CircleDot, tone: "yellow" },
+  cardio: { label: "Cardio", icon: HeartPulse, tone: "amber" },
 };
 
 export function IconTile({

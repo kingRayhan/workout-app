@@ -5,11 +5,22 @@ export type MuscleGroup =
   | "triceps"
   | "back"
   | "biceps"
-  | "core";
+  | "core"
+  | "cardio";
+
+/** Default targets for time-based machine cardio. */
+export type CardioSpec = {
+  durationMin: number;
+  speedKmh?: number;
+  inclinePct?: number;
+  /** Resistance level on bikes / ellipticals. */
+  level?: number;
+};
 
 export type Exercise = {
   id: string;
   name: string;
+  /** Ignored for cardio (`cardio` is set); kept at 1 × 1. */
   sets: number;
   reps: number;
   focus: string;
@@ -17,6 +28,7 @@ export type Exercise = {
   avoid?: string;
   tip?: string;
   muscles: MuscleGroup[];
+  cardio?: CardioSpec;
 };
 
 export type WorkoutDay = {

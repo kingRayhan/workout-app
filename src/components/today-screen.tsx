@@ -1,5 +1,27 @@
 "use client";
 
+import {
+  closestCenter,
+  DndContext,
+  KeyboardSensor,
+  PointerSensor,
+  TouchSensor,
+  useSensor,
+  useSensors,
+  type DragEndEvent,
+} from "@dnd-kit/core";
+import {
+  restrictToParentElement,
+  restrictToVerticalAxis,
+} from "@dnd-kit/modifiers";
+import {
+  arrayMove,
+  SortableContext,
+  sortableKeyboardCoordinates,
+  useSortable,
+  verticalListSortingStrategy,
+} from "@dnd-kit/sortable";
+import { CSS } from "@dnd-kit/utilities";
 import Link from "next/link";
 import { useMemo, useState } from "react";
 import { ActivityHeatmap } from "@/components/activity-heatmap";
@@ -10,6 +32,10 @@ import { TodolistSkeleton } from "@/components/skeletons";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { ExerciseDrawer } from "@/components/exercise-drawer";
+import {
+  ExerciseLogPanel,
+  targetsToPerformed,
+} from "@/components/exercise-log-panel";
 import { OnboardingTour } from "@/components/onboarding-tour";
 import { useProfile, useTodayTodolist } from "@/hooks/use-user-data";
 import { useAuth } from "@/lib/auth";
@@ -19,6 +45,7 @@ import {
   SectionTitle,
   TONE_TEXT,
   TONE_TILE,
+  type Tone,
 } from "@/components/icon-tile";
 import type { Exercise, MuscleGroup } from "@/data/plan";
 import {
@@ -28,12 +55,20 @@ import {
 } from "@/lib/catalog";
 import { localDateKey, WEEKDAY_LABELS } from "@/lib/dates";
 import {
+  formatExerciseTargets,
+  formatPerformed,
+  resolveExerciseSettings,
   setExerciseDone,
   setTourStatus,
+  updateWorkout,
+  type ExerciseLog,
+  type ExerciseSettings,
   type TourStatus,
+  type Workout,
 } from "@/lib/user-data";
 import { cn } from "@/lib/utils";
 import {
+  ArrowDownUp,
   BedDouble,
   BookOpen,
   CalendarPlus,
@@ -43,13 +78,66 @@ import {
   ChevronRight,
   Eye,
   Flame,
+  GripVertical,
   ListChecks,
   LogIn,
   PartyPopper,
+  Repeat,
+  type LucideIcon,
 } from "lucide-react";
 
 /** How far ahead the day switcher can preview. */
 const MAX_FUTURE_DAYS = 6;
+
+function SortableRow({
+  id,
+  enabled,
+  className,
+  children,
+}: {
+  id: string;
+  enabled: boolean;
+  className?: string;
+  /** Receives the drag handle (or `null` when not reordering). */
+  children: (handle: React.ReactNode) => React.ReactNode;
+}) {
+  const {
+    attributes,
+    listeners,
+    setNodeRef,
+    setActivatorNodeRef,
+    transform,
+    transition,
+    isDragging,
+  } = useSortable({ id, disabled: !enabled });
+
+  const handle = enabled ? (
+    <button
+      type="button"
+      ref={setActivatorNodeRef}
+      {...attributes}
+      {...listeners}
+      aria-label={`Reorder ${catalogExerciseName(id)}`}
+      className="mr-2 grid size-10 shrink-0 touch-none cursor-grab place-items-center rounded-lg text-muted-foreground active:cursor-grabbing active:bg-muted active:text-foreground"
+    >
+      <GripVertical className="size-5" aria-hidden />
+    </button>
+  ) : null;
+
+  return (
+    <li
+      ref={setNodeRef}
+      style={{ transform: CSS.Transform.toString(transform), transition }}
+      className={cn(
+        className,
+        "relative bg-card",
+        isDragging && "z-10 rounded-xl shadow-lg ring-1 ring-primary/40",
+      )}
+    >
+      {children(handle)}
+    </li>
+  );
+}
 
 function DaySwitcher({
   selected,
@@ -127,11 +215,312 @@ function DaySwitcher({
   );
 }
 
+type OrderStatus = "idle" | "saving" | "saved" | "error";
+
+function ChecklistCard({
+  workout,
+  eyebrow,
+  icon,
+  tone,
+  isFuture,
+  doneIds,
+  logById,
+  onToggle,
+  onPeek,
+  dataTour,
+}: {
+  workout: Workout;
+  eyebrow: string;
+  icon: LucideIcon;
+  tone: Tone;
+  isFuture: boolean;
+  doneIds: Set<string>;
+  logById: Map<string, ExerciseLog>;
+  onToggle: (workout: Workout, exerciseId: string, next: boolean) => void;
+  onPeek: (workout: Workout, exercise: Exercise, targets: ExerciseSettings) => void;
+  dataTour?: string;
+}) {
+  const { user } = useAuth();
+  const [sorting, setSorting] = useState(false);
+  const [orderStatus, setOrderStatus] = useState<OrderStatus>("idle");
+  const savedOrder = workout.exerciseIds;
+  const savedOrderKey = `${workout.id}:${savedOrder.join("|")}`;
+  // Optimistic order, dropped once the snapshot catches up (key changes).
+  const [pendingOrder, setPendingOrder] = useState<{ key: string; order: string[] } | null>(
+    null,
+  );
+  const order = pendingOrder?.key === savedOrderKey ? pendingOrder.order : savedOrder;
+  const sensors = useSensors(
+    useSensor(PointerSensor, { activationConstraint: { distance: 4 } }),
+    useSensor(TouchSensor, { activationConstraint: { delay: 120, tolerance: 6 } }),
+    useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates }),
+  );
+
+  async function onReorder(event: DragEndEvent) {
+    const { active, over } = event;
+    if (!user || !over || active.id === over.id) return;
+    const next = arrayMove(
+      order,
+      order.indexOf(String(active.id)),
+      order.indexOf(String(over.id)),
+    );
+    setPendingOrder({ key: savedOrderKey, order: next });
+    setOrderStatus("saving");
+    try {
+      await updateWorkout(user.uid, workout.id, {
+        name: workout.name,
+        exerciseIds: next,
+      });
+      setOrderStatus("saved");
+    } catch {
+      setPendingOrder(null);
+      setOrderStatus("error");
+    }
+  }
+
+  const total = order.length;
+  const doneCount = order.filter((id) => doneIds.has(id)).length;
+  const allDone = !isFuture && total > 0 && doneCount === total;
+  const muscles = useMemo(() => {
+    const seen = new Set<MuscleGroup>();
+    for (const id of workout.exerciseIds) {
+      for (const m of getCatalogExercise(id)?.muscles ?? []) seen.add(m);
+    }
+    return MUSCLE_TAGS.map((t) => t.id).filter((m) => seen.has(m));
+  }, [workout.exerciseIds]);
+
+  return (
+    <section
+      data-tour={dataTour}
+      className="animate-rise overflow-hidden rounded-2xl bg-card ring-1 ring-border/80"
+    >
+      <div className="flex items-start gap-3 px-4 pt-3.5 pb-3">
+        <IconTile
+          icon={allDone ? PartyPopper : isFuture ? Eye : icon}
+          tone={allDone ? "lime" : isFuture ? "sky" : tone}
+        />
+        <div className="min-w-0 flex-1">
+          <p className="text-[11px] font-semibold uppercase tracking-[0.08em] text-muted-foreground">
+            {isFuture ? `Preview · ${eyebrow}` : eyebrow}
+          </p>
+          <h2 className="mt-0.5 text-[17px] font-semibold leading-tight tracking-tight">
+            {workout.name}
+          </h2>
+          {muscles.length ? (
+            <div className="mt-2 flex flex-wrap gap-1">
+              {muscles.map((m) => {
+                const style = MUSCLE_STYLE[m];
+                const Icon = style.icon;
+                return (
+                  <span
+                    key={m}
+                    className={cn(
+                      "inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[11px] font-medium",
+                      TONE_TILE[style.tone],
+                    )}
+                  >
+                    <Icon className="size-3" aria-hidden />
+                    {style.label}
+                  </span>
+                );
+              })}
+            </div>
+          ) : null}
+        </div>
+        {total > 0 ? (
+          <div className="text-right">
+            <p
+              className={cn(
+                "text-[20px] font-semibold leading-none tabular-nums",
+                allDone ? "text-primary" : "text-foreground",
+              )}
+            >
+              {isFuture ? total : `${doneCount}/${total}`}
+            </p>
+            <p className="mt-1 text-[11px] text-muted-foreground">
+              {isFuture ? "exercises" : allDone ? "all done" : "done"}
+            </p>
+            {total > 1 ? (
+              <button
+                type="button"
+                onClick={() => {
+                  setSorting((s) => !s);
+                  setOrderStatus("idle");
+                }}
+                aria-pressed={sorting}
+                className={cn(
+                  "mt-2 inline-flex h-7 items-center gap-1 rounded-full px-2.5 text-[11px] font-semibold transition-colors",
+                  sorting
+                    ? "bg-primary text-primary-foreground"
+                    : "bg-muted text-muted-foreground active:bg-muted/80",
+                )}
+              >
+                {sorting ? (
+                  <>
+                    <Check className="size-3" aria-hidden />
+                    Done
+                  </>
+                ) : (
+                  <>
+                    <ArrowDownUp className="size-3" aria-hidden />
+                    Reorder
+                  </>
+                )}
+              </button>
+            ) : null}
+          </div>
+        ) : null}
+      </div>
+      {sorting ? (
+        <p
+          className={cn(
+            "mx-4 mb-3 rounded-xl bg-muted/60 px-3 py-2 text-[12px] text-muted-foreground",
+            orderStatus === "saved" && "text-primary",
+            orderStatus === "error" && "text-destructive",
+          )}
+          aria-live="polite"
+        >
+          {orderStatus === "saving"
+            ? "Saving order…"
+            : orderStatus === "saved"
+              ? `Order saved to ${workout.name}`
+              : orderStatus === "error"
+                ? "Couldn’t save the new order"
+                : `Drag ⋮⋮ to reorder. Saves to your ${workout.name} plan.`}
+        </p>
+      ) : null}
+      {total > 0 && !isFuture ? (
+        <div className="mx-4 mb-3 h-1.5 overflow-hidden rounded-full bg-muted">
+          <div
+            className="h-full rounded-full bg-primary transition-[width] duration-500"
+            style={{ width: `${(doneCount / total) * 100}%` }}
+          />
+        </div>
+      ) : null}
+      <DndContext
+        sensors={sensors}
+        collisionDetection={closestCenter}
+        modifiers={[restrictToVerticalAxis, restrictToParentElement]}
+        onDragEnd={(e) => void onReorder(e)}
+      >
+        <SortableContext items={order} strategy={verticalListSortingStrategy}>
+          <ul className="relative border-t border-border/80">
+            {order.map((id) => {
+              const checked = doneIds.has(id);
+              const name = catalogExerciseName(id);
+              const exerciseMuscles = getCatalogExercise(id)?.muscles ?? [];
+              const primary = exerciseMuscles[0] ? MUSCLE_STYLE[exerciseMuscles[0]] : null;
+              const targets = resolveExerciseSettings(workout, id);
+              const log = logById.get(id);
+              const loggedLine = checked && log ? formatPerformed(log) : null;
+              return (
+                <SortableRow
+                  key={id}
+                  id={id}
+                  enabled={sorting}
+                  className="border-b border-border/60 last:border-b-0"
+                >
+                  {(handle) => (
+                    <div
+                      className={cn(
+                        "flex min-h-14 items-center",
+                        checked && "bg-primary/8",
+                      )}
+                    >
+                      <label
+                        className={cn(
+                          "flex min-h-14 shrink-0 items-center self-stretch pl-4 pr-1",
+                          isFuture ? "cursor-default" : "cursor-pointer",
+                        )}
+                      >
+                        <Checkbox
+                          checked={checked}
+                          disabled={isFuture}
+                          onCheckedChange={(v) => onToggle(workout, id, v === true)}
+                          aria-label={`Mark ${name} done`}
+                          className="size-5 rounded-md"
+                        />
+                      </label>
+                      <button
+                        type="button"
+                        disabled={sorting}
+                        onClick={() => {
+                          if (checked && !isFuture) {
+                            onToggle(workout, id, false);
+                            return;
+                          }
+                          const exercise = getCatalogExercise(id);
+                          if (exercise) onPeek(workout, exercise, targets);
+                        }}
+                        aria-label={checked && !isFuture ? `Undo ${name}` : undefined}
+                        className={cn(
+                          "flex min-h-14 min-w-0 flex-1 items-center gap-3 py-2 pl-2 text-left",
+                          handle ? "pr-0" : "pr-4 active:bg-muted/60",
+                        )}
+                      >
+                        {primary ? (
+                          <IconTile
+                            icon={checked ? Check : primary.icon}
+                            tone={checked ? "lime" : primary.tone}
+                          />
+                        ) : null}
+                        <span className="min-w-0 flex-1">
+                          <span
+                            className={cn(
+                              "block text-[15px] font-medium leading-snug",
+                              checked && "text-muted-foreground line-through",
+                            )}
+                          >
+                            {name}
+                          </span>
+                          {exerciseMuscles.length ? (
+                            <span className="mt-0.5 flex flex-wrap gap-x-2 text-[11px] font-medium">
+                              {exerciseMuscles.map((m) => (
+                                <span
+                                  key={m}
+                                  className={
+                                    checked
+                                      ? "text-muted-foreground"
+                                      : TONE_TEXT[MUSCLE_STYLE[m].tone]
+                                  }
+                                >
+                                  {MUSCLE_STYLE[m].label}
+                                </span>
+                              ))}
+                              <span className="text-muted-foreground tabular-nums">
+                                {loggedLine ?? formatExerciseTargets(targets)}
+                              </span>
+                            </span>
+                          ) : null}
+                        </span>
+                      </button>
+                      {handle}
+                    </div>
+                  )}
+                </SortableRow>
+              );
+            })}
+          </ul>
+        </SortableContext>
+      </DndContext>
+      {total === 0 ? (
+        <p className="px-4 py-4 text-[13px] text-muted-foreground">
+          This workout has no exercises yet.
+        </p>
+      ) : null}
+    </section>
+  );
+}
+
 export function TodayScreen() {
   const { user, loading: authLoading } = useAuth();
   const { profile, loading: profileLoading } = useProfile();
   const [tourDismissed, setTourDismissed] = useState(false);
-  const [peekExercise, setPeekExercise] = useState<Exercise | null>(null);
+  const [peek, setPeek] = useState<{
+    exercise: Exercise;
+    targets: ExerciseSettings;
+    workoutId: string;
+  } | null>(null);
   const [offset, setOffset] = useState(0);
   const selected = useMemo(() => {
     const d = new Date();
@@ -143,11 +532,16 @@ export function TodayScreen() {
     date,
     weekday,
     workout,
-    workoutId,
+    dailyWorkout,
     doneIds,
+    logs,
     loading,
     error,
   } = useTodayTodolist(localDateKey(selected));
+  const logById = useMemo(
+    () => new Map(logs.map((l) => [l.exerciseId, l])),
+    [logs],
+  );
 
   const weekdayLong = new Intl.DateTimeFormat(undefined, {
     weekday: "long",
@@ -157,18 +551,12 @@ export function TodayScreen() {
     day: "numeric",
   }).format(selected);
 
-  const doneCount = workout
-    ? workout.exerciseIds.filter((id) => doneIds.has(id)).length
-    : 0;
-  const total = workout?.exerciseIds.length ?? 0;
-  const allDone = !isFuture && total > 0 && doneCount === total;
-  const workoutMuscles = useMemo(() => {
-    const seen = new Set<MuscleGroup>();
-    for (const id of workout?.exerciseIds ?? []) {
-      for (const m of getCatalogExercise(id)?.muscles ?? []) seen.add(m);
-    }
-    return MUSCLE_TAGS.map((t) => t.id).filter((m) => seen.has(m));
-  }, [workout]);
+  const allIds = new Set([
+    ...(workout?.exerciseIds ?? []),
+    ...(dailyWorkout?.exerciseIds ?? []),
+  ]);
+  const total = allIds.size;
+  const doneCount = [...allIds].filter((id) => doneIds.has(id)).length;
   const showDataSkeleton = authLoading || (Boolean(user) && loading);
   const showTour =
     Boolean(user) &&
@@ -191,42 +579,60 @@ export function TodayScreen() {
   const headerTitle =
     user && firstName ? `${timeGreeting}, ${firstName}` : "Today";
 
-  const statusLine = !user
+  const dayName = workout ? weekdayLong : `Rest day · ${weekdayLong}`;
+  const statusLine = !user || loading
     ? `${weekdayLong} · ${dateLabel}`
-    : loading
-      ? `${weekdayLong} · ${dateLabel}`
-      : !workout
-        ? `Rest day · ${weekdayLong}`
-        : total === 0
-          ? `${weekdayLong} · ${dateLabel}`
-          : doneCount === total
-            ? `All ${total} done for ${weekdayLong} 🎉`
-            : `${doneCount}/${total} done · ${weekdayLong}`;
+    : total === 0
+      ? workout
+        ? `${weekdayLong} · ${dateLabel}`
+        : `Rest day · ${weekdayLong}`
+      : doneCount === total
+        ? `All ${total} done for ${weekdayLong} 🎉`
+        : `${doneCount}/${total} done · ${dayName}`;
 
-  async function toggle(exerciseId: string, next: boolean) {
+  async function toggle(owner: Workout, exerciseId: string, next: boolean) {
     if (!user || isFuture) return;
     try {
       await setExerciseDone(user.uid, {
         date,
         exerciseId,
-        workoutId,
+        workoutId: owner.id,
         done: next,
+        performed: targetsToPerformed(resolveExerciseSettings(owner, exerciseId)),
       });
     } catch {
       // snapshot will reconcile
     }
   }
 
+  function openPeek(owner: Workout, exercise: Exercise, targets: ExerciseSettings) {
+    setPeek({ exercise, targets, workoutId: owner.id });
+  }
+
   return (
     <div className="flex flex-col pb-4">
       {showTour ? <OnboardingTour onFinish={finishTour} /> : null}
       <ExerciseDrawer
-        exercise={peekExercise}
-        open={peekExercise !== null}
+        exercise={peek?.exercise ?? null}
+        targets={peek?.targets}
+        open={peek !== null}
         onOpenChange={(open) => {
-          if (!open) setPeekExercise(null);
+          if (!open) setPeek(null);
         }}
-      />
+      >
+        {peek && user ? (
+          <ExerciseLogPanel
+            key={`${peek.exercise.id}-${date}`}
+            exerciseId={peek.exercise.id}
+            date={date}
+            workoutId={peek.workoutId}
+            targets={peek.targets}
+            log={logById.get(peek.exercise.id)}
+            disabled={isFuture}
+            onLogged={() => setPeek(null)}
+          />
+        ) : null}
+      </ExerciseDrawer>
       <AppHeader title={headerTitle} subtitle={statusLine} />
 
       <div className="flex flex-col gap-3 px-4 pt-1">
@@ -260,7 +666,10 @@ export function TodayScreen() {
         {user && !loading && !workout ? (
           <section
             data-tour="rest-day"
-            className="animate-rise rounded-2xl bg-muted px-4 py-8 text-center"
+            className={cn(
+              "animate-rise rounded-2xl bg-muted px-4 text-center",
+              dailyWorkout ? "py-5" : "py-8",
+            )}
           >
             <span className="mx-auto mb-3 grid size-12 place-items-center rounded-2xl bg-sky-500/15 text-sky-400">
               <BedDouble className="size-6" aria-hidden />
@@ -269,159 +678,50 @@ export function TodayScreen() {
               Rest day
             </p>
             <p className="mx-auto mt-1.5 max-w-[15rem] text-[13px] leading-snug text-muted-foreground">
-              Nothing on {WEEKDAY_LABELS[weekday]} — schedule a workout in Plan.
+              {dailyWorkout
+                ? `No workout on ${WEEKDAY_LABELS[weekday]} — just your every-day list below.`
+                : `Nothing on ${WEEKDAY_LABELS[weekday]} — schedule a workout in Plan.`}
             </p>
-            <Button asChild className="mt-4 h-10 rounded-xl px-5 font-semibold">
-              <Link href="/plan">
-                <CalendarPlus className="size-4" aria-hidden />
-                Open Plan
-              </Link>
-            </Button>
+            {dailyWorkout ? null : (
+              <Button asChild className="mt-4 h-10 rounded-xl px-5 font-semibold">
+                <Link href="/plan">
+                  <CalendarPlus className="size-4" aria-hidden />
+                  Open Plan
+                </Link>
+              </Button>
+            )}
           </section>
         ) : null}
 
-        {user && workout ? (
-          <section
-            data-tour="todolist"
-            className="animate-rise overflow-hidden rounded-2xl bg-card ring-1 ring-border/80"
-          >
-            <div className="flex items-start gap-3 px-4 pt-3.5 pb-3">
-              <IconTile
-                icon={allDone ? PartyPopper : isFuture ? Eye : ListChecks}
-                tone={allDone ? "lime" : isFuture ? "sky" : "lime"}
-              />
-              <div className="min-w-0 flex-1">
-                <p className="text-[11px] font-semibold uppercase tracking-[0.08em] text-muted-foreground">
-                  {isFuture ? "Preview" : "Daily todolist"}
-                </p>
-                <h2 className="mt-0.5 text-[17px] font-semibold leading-tight tracking-tight">
-                  {workout.name}
-                </h2>
-                {workoutMuscles.length ? (
-                  <div className="mt-2 flex flex-wrap gap-1">
-                    {workoutMuscles.map((m) => {
-                      const style = MUSCLE_STYLE[m];
-                      const Icon = style.icon;
-                      return (
-                        <span
-                          key={m}
-                          className={cn(
-                            "inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[11px] font-medium",
-                            TONE_TILE[style.tone],
-                          )}
-                        >
-                          <Icon className="size-3" aria-hidden />
-                          {style.label}
-                        </span>
-                      );
-                    })}
-                  </div>
-                ) : null}
-              </div>
-              {total > 0 ? (
-                <div className="text-right">
-                  <p
-                    className={cn(
-                      "text-[20px] font-semibold leading-none tabular-nums",
-                      allDone ? "text-primary" : "text-foreground",
-                    )}
-                  >
-                    {isFuture ? total : `${doneCount}/${total}`}
-                  </p>
-                  <p className="mt-1 text-[11px] text-muted-foreground">
-                    {isFuture ? "exercises" : allDone ? "all done" : "done"}
-                  </p>
-                </div>
-              ) : null}
-            </div>
-            {total > 0 && !isFuture ? (
-              <div className="mx-4 mb-3 h-1.5 overflow-hidden rounded-full bg-muted">
-                <div
-                  className="h-full rounded-full bg-primary transition-[width] duration-500"
-                  style={{ width: `${(doneCount / total) * 100}%` }}
-                />
-              </div>
-            ) : null}
-            <ul className="border-t border-border/80">
-              {workout.exerciseIds.map((id) => {
-                const checked = doneIds.has(id);
-                const name = catalogExerciseName(id);
-                const muscles = getCatalogExercise(id)?.muscles ?? [];
-                const primary = muscles[0] ? MUSCLE_STYLE[muscles[0]] : null;
-                return (
-                  <li
-                    key={id}
-                    className={cn(
-                      "flex min-h-14 items-center gap-2 border-b border-border/60 last:border-b-0",
-                      checked && "bg-primary/8",
-                    )}
-                  >
-                    <label
-                      className={cn(
-                        "flex min-h-14 min-w-0 flex-1 items-center gap-3 py-2 pl-4",
-                        isFuture ? "cursor-default" : "cursor-pointer active:bg-muted/60",
-                      )}
-                    >
-                      <Checkbox
-                        checked={checked}
-                        disabled={isFuture}
-                        onCheckedChange={(v) => void toggle(id, v === true)}
-                        className="size-5 rounded-md"
-                      />
-                      {primary ? (
-                        <IconTile
-                          icon={checked ? Check : primary.icon}
-                          tone={checked ? "lime" : primary.tone}
-                        />
-                      ) : null}
-                      <span className="min-w-0 flex-1">
-                        <span
-                          className={cn(
-                            "block text-[15px] font-medium leading-snug",
-                            checked && "text-muted-foreground line-through",
-                          )}
-                        >
-                          {name}
-                        </span>
-                        {muscles.length ? (
-                          <span className="mt-0.5 flex flex-wrap gap-x-2 text-[11px] font-medium">
-                            {muscles.map((m) => (
-                              <span
-                                key={m}
-                                className={
-                                  checked
-                                    ? "text-muted-foreground"
-                                    : TONE_TEXT[MUSCLE_STYLE[m].tone]
-                                }
-                              >
-                                {MUSCLE_STYLE[m].label}
-                              </span>
-                            ))}
-                          </span>
-                        ) : null}
-                      </span>
-                    </label>
-                    <button
-                      type="button"
-                      aria-label={`Look up ${name}`}
-                      onClick={() => {
-                        const exercise = getCatalogExercise(id);
-                        if (exercise) setPeekExercise(exercise);
-                      }}
-                      className="mr-2 flex size-10 shrink-0 items-center justify-center rounded-lg text-muted-foreground active:bg-muted active:text-primary"
-                    >
-                      <BookOpen className="size-4" aria-hidden />
-                    </button>
-                  </li>
-                );
-              })}
-            </ul>
-            {total === 0 ? (
-              <p className="px-4 py-4 text-[13px] text-muted-foreground">
-                This workout has no exercises yet.
-              </p>
-            ) : null}
-          </section>
+        {user && !loading && workout ? (
+          <ChecklistCard
+            key={`${date}:${workout.id}`}
+            workout={workout}
+            eyebrow="Daily todolist"
+            icon={ListChecks}
+            tone="lime"
+            isFuture={isFuture}
+            doneIds={doneIds}
+            logById={logById}
+            onToggle={(w, id, next) => void toggle(w, id, next)}
+            onPeek={openPeek}
+            dataTour="todolist"
+          />
+        ) : null}
+
+        {user && !loading && dailyWorkout ? (
+          <ChecklistCard
+            key={`${date}:daily:${dailyWorkout.id}`}
+            workout={dailyWorkout}
+            eyebrow="Every day"
+            icon={Repeat}
+            tone="amber"
+            isFuture={isFuture}
+            doneIds={doneIds}
+            logById={logById}
+            onToggle={(w, id, next) => void toggle(w, id, next)}
+            onPeek={openPeek}
+          />
         ) : null}
 
         {user ? (

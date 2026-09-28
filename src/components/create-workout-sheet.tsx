@@ -1,5 +1,6 @@
 "use client";
 
+import { Search } from "lucide-react";
 import { useMemo, useState } from "react";
 import { TagFilterBar } from "@/components/workout-catalog";
 import { Button } from "@/components/ui/button";
@@ -18,6 +19,7 @@ import type { MuscleGroup } from "@/data/plan";
 import { useAuth } from "@/lib/auth";
 import {
   allCatalogExercises,
+  filterExercisesByQuery,
   filterExercisesByTag,
 } from "@/lib/catalog";
 import {
@@ -40,6 +42,7 @@ export function CreateWorkoutSheet({
   const [name, setName] = useState("");
   const [selected, setSelected] = useState<string[]>([]);
   const [tag, setTag] = useState<MuscleGroup | null>(null);
+  const [query, setQuery] = useState("");
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -50,6 +53,7 @@ export function CreateWorkoutSheet({
       setName(workout?.name ?? "");
       setSelected(workout ? [...workout.exerciseIds] : []);
       setTag(null);
+      setQuery("");
       setError(null);
       setSaving(false);
     }
@@ -58,8 +62,8 @@ export function CreateWorkoutSheet({
   const selectedSet = useMemo(() => new Set(selected), [selected]);
   const all = useMemo(() => allCatalogExercises(), []);
   const filtered = useMemo(
-    () => filterExercisesByTag(all, tag),
-    [all, tag],
+    () => filterExercisesByQuery(filterExercisesByTag(all, tag), query),
+    [all, tag, query],
   );
 
   function toggle(id: string) {
@@ -72,6 +76,7 @@ export function CreateWorkoutSheet({
     setName("");
     setSelected([]);
     setTag(null);
+    setQuery("");
     setError(null);
     setSaving(false);
   }
@@ -134,7 +139,26 @@ export function CreateWorkoutSheet({
             <p className="text-[13px] font-medium text-foreground">
               Exercises · {selected.length} selected
             </p>
-            <TagFilterBar value={tag} onChange={setTag} />
+            <div className="sticky top-0 z-10 -mx-4 space-y-2 bg-popover px-4 pb-2">
+              <div className="relative">
+                <Search
+                  className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground"
+                  aria-hidden
+                />
+                <Input
+                  type="search"
+                  value={query}
+                  onChange={(e) => setQuery(e.target.value)}
+                  placeholder="Search exercises"
+                  aria-label="Search exercises"
+                  className="h-10 rounded-xl bg-muted/80 pl-9 pr-3 text-[15px] dark:bg-muted/80"
+                  autoCapitalize="off"
+                  autoCorrect="off"
+                  enterKeyHint="search"
+                />
+              </div>
+              <TagFilterBar value={tag} onChange={setTag} />
+            </div>
             <ul className="overflow-hidden rounded-xl bg-muted/60">
               {filtered.map((ex) => {
                 const checked = selectedSet.has(ex.id);
@@ -159,7 +183,9 @@ export function CreateWorkoutSheet({
               })}
               {filtered.length === 0 ? (
                 <li className="px-3 py-6 text-center text-[13px] text-muted-foreground">
-                  No exercises for this tag.
+                  {query.trim()
+                    ? `No exercises match “${query.trim()}”.`
+                    : "No exercises for this tag."}
                 </li>
               ) : null}
             </ul>

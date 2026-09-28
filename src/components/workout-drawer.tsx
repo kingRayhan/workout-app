@@ -22,8 +22,15 @@ import {
   verticalListSortingStrategy,
 } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
-import { CalendarDays, GripVertical, Pencil, Trash2 } from "lucide-react";
+import {
+  CalendarDays,
+  GripVertical,
+  Pencil,
+  SlidersHorizontal,
+  Trash2,
+} from "lucide-react";
 import { useMemo, useState } from "react";
+import { ExerciseSettingsEditor } from "@/components/exercise-settings-editor";
 import {
   IconTile,
   MUSCLE_STYLE,
@@ -47,10 +54,35 @@ import {
   MUSCLE_TAGS,
 } from "@/lib/catalog";
 import { WEEKDAY_KEYS, WEEKDAY_LABELS } from "@/lib/dates";
-import { updateWorkout, type Schedule, type Workout } from "@/lib/user-data";
+import {
+  defaultExerciseSettings,
+  formatExerciseTargets,
+  resolveExerciseSettings,
+  setExerciseSettings,
+  updateWorkout,
+  type ExerciseSettings,
+  type Schedule,
+  type Workout,
+} from "@/lib/user-data";
 import { cn } from "@/lib/utils";
 
-function SortableExercise({ id, index }: { id: string; index: number }) {
+function SortableExercise({
+  id,
+  index,
+  settings,
+  customized,
+  expanded,
+  onToggle,
+  editor,
+}: {
+  id: string;
+  index: number;
+  settings: ExerciseSettings;
+  customized: boolean;
+  expanded: boolean;
+  onToggle: () => void;
+  editor: React.ReactNode;
+}) {
   const {
     attributes,
     listeners,
@@ -70,38 +102,64 @@ function SortableExercise({ id, index }: { id: string; index: number }) {
       data-vaul-no-drag
       style={{ transform: CSS.Transform.toString(transform), transition }}
       className={cn(
-        "relative flex min-h-14 items-center gap-3 bg-popover py-2 pl-3 pr-1",
+        "relative bg-popover",
+        expanded && "bg-muted/30",
         isDragging && "z-10 rounded-xl shadow-lg ring-1 ring-primary/40",
       )}
     >
-      <span className="w-4 shrink-0 text-center text-[12px] font-semibold text-muted-foreground tabular-nums">
-        {index + 1}
-      </span>
-      {primary ? <IconTile icon={primary.icon} tone={primary.tone} /> : null}
-      <span className="min-w-0 flex-1">
-        <span className="block truncate text-[15px] font-medium leading-snug">
-          {name}
+      <div className="flex min-h-14 items-center gap-3 py-2 pl-3 pr-1">
+        <span className="w-4 shrink-0 text-center text-[12px] font-semibold text-muted-foreground tabular-nums">
+          {index + 1}
         </span>
-        {muscles.length ? (
-          <span className="mt-0.5 flex flex-wrap gap-x-2 text-[11px] font-medium">
-            {muscles.map((m) => (
-              <span key={m} className={TONE_TEXT[MUSCLE_STYLE[m].tone]}>
-                {MUSCLE_STYLE[m].label}
+        <button
+          type="button"
+          onClick={onToggle}
+          aria-expanded={expanded}
+          aria-label={`${name} settings`}
+          className="flex min-w-0 flex-1 items-center gap-3 rounded-lg text-left active:opacity-70"
+        >
+          {primary ? <IconTile icon={primary.icon} tone={primary.tone} /> : null}
+          <span className="min-w-0 flex-1">
+            <span className="block truncate text-[15px] font-medium leading-snug">
+              {name}
+            </span>
+            <span
+              className={cn(
+                "mt-0.5 flex items-center gap-1 text-[12px] tabular-nums",
+                customized ? "text-foreground/85" : "text-muted-foreground",
+              )}
+            >
+              {primary ? (
+                <span className={cn("font-medium", TONE_TEXT[primary.tone])}>
+                  {primary.label}
+                </span>
+              ) : null}
+              <span aria-hidden className="text-border">
+                ·
               </span>
-            ))}
+              <span className="truncate">{formatExerciseTargets(settings)}</span>
+            </span>
           </span>
-        ) : null}
-      </span>
-      <button
-        type="button"
-        ref={setActivatorNodeRef}
-        {...attributes}
-        {...listeners}
-        aria-label={`Reorder ${name}`}
-        className="grid size-10 shrink-0 touch-none cursor-grab place-items-center rounded-lg text-muted-foreground active:cursor-grabbing active:bg-muted active:text-foreground"
-      >
-        <GripVertical className="size-5" aria-hidden />
-      </button>
+          <SlidersHorizontal
+            className={cn(
+              "size-4 shrink-0",
+              expanded || customized ? "text-primary" : "text-muted-foreground",
+            )}
+            aria-hidden
+          />
+        </button>
+        <button
+          type="button"
+          ref={setActivatorNodeRef}
+          {...attributes}
+          {...listeners}
+          aria-label={`Reorder ${name}`}
+          className="grid size-10 shrink-0 touch-none cursor-grab place-items-center rounded-lg text-muted-foreground active:cursor-grabbing active:bg-muted active:text-foreground"
+        >
+          <GripVertical className="size-5" aria-hidden />
+        </button>
+      </div>
+      {expanded ? <div className="animate-expand">{editor}</div> : null}
     </li>
   );
 }
@@ -123,6 +181,7 @@ export function WorkoutDrawer({
 }) {
   const { user } = useAuth();
   const [status, setStatus] = useState<"idle" | "saving" | "saved" | "error">("idle");
+  const [expandedId, setExpandedId] = useState<string | null>(null);
   const saved = useMemo(() => workout?.exerciseIds ?? [], [workout?.exerciseIds]);
   const savedKey = saved.join("|");
   // Optimistic order, dropped once the snapshot catches up (key changes).
@@ -173,7 +232,10 @@ export function WorkoutDrawer({
     <Drawer
       open={open}
       onOpenChange={(next) => {
-        if (!next) setStatus("idle");
+        if (!next) {
+          setStatus("idle");
+          setExpandedId(null);
+        }
         onOpenChange(next);
       }}
     >
@@ -186,9 +248,11 @@ export function WorkoutDrawer({
               </DrawerTitle>
               <DrawerDescription className="flex items-center gap-1.5 text-[12px]">
                 <CalendarDays className="size-3.5" aria-hidden />
-                {days.length
-                  ? days.map((d) => WEEKDAY_LABELS[d]).join(", ")
-                  : "Not scheduled"}
+                {schedule.daily === workout.id
+                  ? "Every day"
+                  : days.length
+                    ? days.map((d) => WEEKDAY_LABELS[d]).join(", ")
+                    : "Not scheduled"}
                 <span aria-hidden>·</span>
                 {order.length} exercises
               </DrawerDescription>
@@ -216,7 +280,7 @@ export function WorkoutDrawer({
 
             <div className="flex items-center justify-between px-4 pt-3 pb-1 text-[11px]">
               <span className="font-semibold uppercase tracking-wider text-muted-foreground">
-                Order
+                Exercises
               </span>
               <span
                 className={cn(
@@ -232,7 +296,7 @@ export function WorkoutDrawer({
                     ? "Order saved"
                     : status === "error"
                       ? "Couldn’t save order"
-                      : "Drag ⋮⋮ to reorder"}
+                      : "Tap to set targets · drag ⋮⋮ to reorder"}
               </span>
             </div>
 
@@ -246,9 +310,43 @@ export function WorkoutDrawer({
                 >
                   <SortableContext items={order} strategy={verticalListSortingStrategy}>
                     <ul className="relative divide-y divide-border/60">
-                      {order.map((id, i) => (
-                        <SortableExercise key={id} id={id} index={i} />
-                      ))}
+                      {order.map((id, i) => {
+                        const settings = resolveExerciseSettings(workout, id);
+                        const customized = id in workout.settings;
+                        const close = () => setExpandedId(null);
+                        return (
+                          <SortableExercise
+                            key={id}
+                            id={id}
+                            index={i}
+                            settings={settings}
+                            customized={customized}
+                            expanded={expandedId === id}
+                            onToggle={() =>
+                              setExpandedId((cur) => (cur === id ? null : id))
+                            }
+                            editor={
+                              <ExerciseSettingsEditor
+                                exerciseId={id}
+                                initial={settings}
+                                defaults={defaultExerciseSettings(id)}
+                                customized={customized}
+                                onCancel={close}
+                                onSave={async (next) => {
+                                  if (!user) return;
+                                  await setExerciseSettings(user.uid, workout.id, id, next);
+                                  close();
+                                }}
+                                onReset={async () => {
+                                  if (!user) return;
+                                  await setExerciseSettings(user.uid, workout.id, id, null);
+                                  close();
+                                }}
+                              />
+                            }
+                          />
+                        );
+                      })}
                     </ul>
                   </SortableContext>
                 </DndContext>

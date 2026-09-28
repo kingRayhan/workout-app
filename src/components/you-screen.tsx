@@ -5,9 +5,12 @@ import { AppHeader } from "@/components/app-header";
 import { GoogleSignInButton } from "@/components/google-sign-in-button";
 import { ProfileCard } from "@/components/profile-card";
 import { AccountRowSkeleton } from "@/components/skeletons";
+import { IconTile } from "@/components/icon-tile";
+import { EXERCISE_LOG_HREF, WEIGHT_LOG_HREF } from "@/lib/routes";
 import { useAuth } from "@/lib/auth";
 import { setTourStatus } from "@/lib/user-data";
-import { ChevronRight, Compass } from "lucide-react";
+import { ChevronRight, Compass, Dumbbell, Scale } from "lucide-react";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 
@@ -52,6 +55,40 @@ export function YouScreen() {
         </section>
 
         {user ? <ProfileCard /> : null}
+
+        {user ? (
+          <section className="rounded-2xl bg-card px-4 py-4 ring-1 ring-border/80">
+            <h2 className="text-[13px] font-semibold">Logs</h2>
+            <div className="mt-3 space-y-2">
+              <Link
+                href={EXERCISE_LOG_HREF}
+                className="flex items-center gap-3 rounded-xl bg-muted/60 px-3 py-2.5 active:bg-muted"
+              >
+                <IconTile icon={Dumbbell} tone="lime" size="sm" />
+                <span className="min-w-0 flex-1">
+                  <span className="block text-[13px] font-medium">Exercise log</span>
+                  <span className="block text-[11px] text-muted-foreground">
+                    Weights lifted, sessions, and personal bests
+                  </span>
+                </span>
+                <ChevronRight className="size-4 text-muted-foreground" aria-hidden />
+              </Link>
+              <Link
+                href={WEIGHT_LOG_HREF}
+                className="flex items-center gap-3 rounded-xl bg-muted/60 px-3 py-2.5 active:bg-muted"
+              >
+                <IconTile icon={Scale} tone="amber" size="sm" />
+                <span className="min-w-0 flex-1">
+                  <span className="block text-[13px] font-medium">Body weight log</span>
+                  <span className="block text-[11px] text-muted-foreground">
+                    Weigh-ins, trend, and target progress
+                  </span>
+                </span>
+                <ChevronRight className="size-4 text-muted-foreground" aria-hidden />
+              </Link>
+            </div>
+          </section>
+        ) : null}
 
         <section className="rounded-2xl bg-card px-4 py-4 ring-1 ring-border/80">
           <h2 className="text-[13px] font-semibold">Report</h2>

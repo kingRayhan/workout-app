@@ -297,6 +297,61 @@ export const EXERCISE_EXTRA: Record<string, ExerciseExtra> = {
     ],
     mistakes: ["Swinging", "Turning into a regular curl mid-set", "Rushing reps"],
   },
+  "treadmill-walk": {
+    why: "Easy, joint-friendly cardio you can do every day — adds steps, helps recovery, and burns energy without eating into lifting.",
+    breathing: "Relaxed nose or mouth breathing; you should be able to chat.",
+    tempo: "Steady pace the whole time · 1 min build-up · 1–2 min cool-down.",
+    cautions: [
+      "Clip the safety key to your clothing.",
+      "Start the belt before stepping on; step off only once it stops.",
+      "Stop if you feel dizzy, chest pain, or unusual breathlessness.",
+    ],
+    mistakes: ["Gripping the rails the whole time", "Looking down at your feet", "Walking too close to the front"],
+  },
+  "incline-walk": {
+    why: "Incline raises the effort and works glutes and calves while staying low-impact on the knees.",
+    breathing: "Steady breathing; short sentences should still be possible.",
+    tempo: "Warm up flat · hold the incline · lower it to cool down.",
+    cautions: [
+      "Clip the safety key to your clothing.",
+      "Raise the incline gradually — calves and shins need time to adapt.",
+      "Ease back if your lower back or shins ache.",
+    ],
+    mistakes: ["Hanging off the handrails", "Leaning far forward from the hips", "Jumping straight to a steep incline"],
+  },
+  "treadmill-jog": {
+    why: "Builds aerobic fitness and endurance faster than walking.",
+    breathing: "Rhythmic breathing — e.g. in for 2–3 steps, out for 2–3 steps.",
+    tempo: "Easy conversational jog · walk to warm up and cool down.",
+    cautions: [
+      "Clip the safety key to your clothing.",
+      "Build time before speed — add a few minutes a week.",
+      "Stop for sharp joint pain (not just tired legs).",
+    ],
+    mistakes: ["Overstriding", "Heavy heel strikes", "Starting too fast"],
+  },
+  "stationary-bike": {
+    why: "Low-impact cardio that is easy on knees and hips and adds quad work.",
+    breathing: "Steady breathing; push harder only if you can keep it controlled.",
+    tempo: "Steady cadence · add resistance to make it harder.",
+    cautions: [
+      "Set the seat height before you start.",
+      "Keep the knees tracking over the feet.",
+      "Stop if the seat causes numbness — adjust or stand briefly.",
+    ],
+    mistakes: ["Seat too low", "Bouncing in the saddle at high speed", "Hunching the shoulders"],
+  },
+  elliptical: {
+    why: "Full-body, joint-friendly cardio — arms and legs work together with no impact.",
+    breathing: "Steady breathing throughout.",
+    tempo: "Smooth, even strides · raise resistance rather than speed.",
+    cautions: [
+      "Step on and off only when the pedals are still.",
+      "Stand tall; don't lean over the console.",
+      "Keep feet flat on the pedals to avoid toe numbness.",
+    ],
+    mistakes: ["Leaning on the fixed rails", "Only using the legs", "Lifting the heels"],
+  },
 };
 
 export function getExerciseExtra(id: string): ExerciseExtra | undefined {
