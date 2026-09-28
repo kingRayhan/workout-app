@@ -96,10 +96,10 @@ export function formatRest(sec: number) {
   return s ? `${m}m ${s}s` : `${m}m`;
 }
 
-/** e.g. "3 × 12 · 40 kg · 90s rest" or "20 min · 4.5 km/h" */
+/** e.g. "3 sets of 12 · 40 kg · 90s rest" or "20 min · 4.5 km/h" */
 export function formatExerciseTargets(s: ExerciseSettings) {
   if (s.durationMin !== null) return formatCardio(s);
-  const parts = [`${s.sets} × ${s.reps}`];
+  const parts = [`${s.sets} ${s.sets === 1 ? "set" : "sets"} of ${s.reps}`];
   if (s.weightKg !== null) parts.push(`${s.weightKg} kg`);
   if (s.restSec !== null) parts.push(`${formatRest(s.restSec)} rest`);
   return parts.join(" · ");

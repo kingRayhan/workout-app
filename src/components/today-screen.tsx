@@ -22,6 +22,7 @@ import {
   verticalListSortingStrategy,
 } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
+import Image from "next/image";
 import Link from "next/link";
 import { useMemo, useState } from "react";
 import { ActivityHeatmap } from "@/components/activity-heatmap";
@@ -51,9 +52,11 @@ import type { Exercise, MuscleGroup } from "@/data/plan";
 import {
   catalogExerciseName,
   getCatalogExercise,
+  isCardioExercise,
   MUSCLE_TAGS,
 } from "@/lib/catalog";
 import { localDateKey, WEEKDAY_LABELS } from "@/lib/dates";
+import { EXERCISE_LOG_HREF, WEIGHT_LOG_HREF } from "@/lib/routes";
 import {
   formatExerciseTargets,
   formatPerformed,
@@ -70,7 +73,6 @@ import { cn } from "@/lib/utils";
 import {
   ArrowDownUp,
   BedDouble,
-  BookOpen,
   CalendarPlus,
   ChartColumn,
   Check,
@@ -397,6 +399,15 @@ function ChecklistCard({
           />
         </div>
       ) : null}
+      {!sorting && total > 0 && (isFuture || doneCount === 0) ? (
+        <p className="mx-4 mb-3 text-[12px] leading-snug text-muted-foreground">
+          {isFuture
+            ? "Open any exercise to read how to do it. You can log it once this day arrives."
+            : order.some((id) => !isCardioExercise(id))
+              ? "Tap a row to log it. “3 sets of 15” means 15 reps, rest, then repeat — 3 times."
+              : "Tap a row to log the time and speed you actually did."}
+        </p>
+      ) : null}
       <DndContext
         sensors={sensors}
         collisionDetection={closestCenter}
@@ -407,6 +418,11 @@ function ChecklistCard({
           <ul className="relative border-t border-border/80">
             {order.map((id) => {
               const checked = doneIds.has(id);
+              const isNext =
+                !checked &&
+                !isFuture &&
+                !sorting &&
+                order.find((candidate) => !doneIds.has(candidate)) === id;
               const name = catalogExerciseName(id);
               const exerciseMuscles = getCatalogExercise(id)?.muscles ?? [];
               const primary = exerciseMuscles[0] ? MUSCLE_STYLE[exerciseMuscles[0]] : null;
@@ -425,6 +441,7 @@ function ChecklistCard({
                       className={cn(
                         "flex min-h-14 items-center",
                         checked && "bg-primary/8",
+                        isNext && "bg-primary/5",
                       )}
                     >
                       <label
@@ -467,12 +484,17 @@ function ChecklistCard({
                         <span className="min-w-0 flex-1">
                           <span
                             className={cn(
-                              "block text-[15px] font-medium leading-snug",
-                              checked && "text-muted-foreground line-through",
-                            )}
-                          >
-                            {name}
-                          </span>
+                            "block text-[15px] font-medium leading-snug",
+                            checked && "text-muted-foreground line-through",
+                          )}
+                        >
+                          {isNext ? (
+                            <span className="mr-1.5 align-middle text-[10px] font-semibold uppercase tracking-wider text-primary">
+                              Next
+                            </span>
+                          ) : null}
+                          {name}
+                        </span>
                           {exerciseMuscles.length ? (
                             <span className="mt-0.5 flex flex-wrap gap-x-2 text-[11px] font-medium">
                               {exerciseMuscles.map((m) => (
@@ -766,21 +788,61 @@ export function TodayScreen() {
           </section>
         )}
 
-        <Link
-          href="/catalog"
-          className="animate-rise flex min-h-12 items-center gap-3 rounded-2xl bg-card px-4 py-3 ring-1 ring-border/80 active:bg-muted/60"
+        <nav
+          aria-label="Reports and logs"
+          className="animate-rise grid grid-cols-2 gap-2"
         >
-          <IconTile icon={BookOpen} tone="violet" />
-          <span className="min-w-0 flex-1">
-            <span className="block text-[15px] font-semibold">
-              Browse catalog
-            </span>
-            <span className="block text-[12px] text-muted-foreground">
-              Form videos & cues
-            </span>
-          </span>
-          <ChevronRight className="size-4 text-muted-foreground" aria-hidden />
-        </Link>
+          {(
+            [
+              {
+                href: EXERCISE_LOG_HREF,
+                label: "Exercise log",
+                hint: "Lifts and sessions",
+                image: "/shortcuts/exercise.png",
+              },
+              {
+                href: WEIGHT_LOG_HREF,
+                label: "Weight log",
+                hint: "Weigh-ins and trend",
+                image: "/shortcuts/weight.png",
+              },
+              {
+                href: "/you",
+                label: "Report",
+                hint: "Activity and streaks",
+                image: "/shortcuts/report.png",
+              },
+              {
+                href: "/catalog",
+                label: "Catalog",
+                hint: "Form videos",
+                image: "/shortcuts/catalog.png",
+              },
+            ] as const
+          ).map((item) => (
+            <Link
+              key={item.href}
+              href={item.href}
+              className="flex min-h-16 items-center gap-3 rounded-2xl bg-card px-3 py-3 ring-1 ring-border/80 active:bg-muted/60"
+            >
+              <Image
+                src={item.image}
+                alt=""
+                width={256}
+                height={256}
+                className="size-12 shrink-0 object-contain"
+              />
+              <span className="min-w-0">
+                <span className="block truncate text-[14px] font-semibold leading-tight">
+                  {item.label}
+                </span>
+                <span className="mt-0.5 block truncate text-[11px] text-muted-foreground">
+                  {item.hint}
+                </span>
+              </span>
+            </Link>
+          ))}
+        </nav>
       </div>
     </div>
   );
