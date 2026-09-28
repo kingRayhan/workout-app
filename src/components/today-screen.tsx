@@ -392,9 +392,9 @@ function ChecklistCard({
         </p>
       ) : null}
       {total > 0 && !isFuture ? (
-        <div className="mx-4 mb-3 h-1.5 overflow-hidden rounded-full bg-muted">
+        <div className="xp-track mx-4 mb-3">
           <div
-            className="h-full rounded-full bg-primary transition-[width] duration-500"
+            className="xp-fill"
             style={{ width: `${(doneCount / total) * 100}%` }}
           />
         </div>
