@@ -8,6 +8,7 @@ import { ICONS } from "@/lib/icons";
 const LINKS = [
   { href: "/machines", label: "Machines", icon: ICONS.machines },
   { href: "/workouts", label: "Workouts", icon: ICONS.workouts },
+  { href: "/aerobics", label: "Aerobics", icon: ICONS.aerobics },
   { href: "/blog", label: "Guides", icon: ICONS.blog },
 ] as const;
 

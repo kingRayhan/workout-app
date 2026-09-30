@@ -5,6 +5,7 @@ export const ICONS = {
   logo: "/shortcuts/exercise.png",
   machines: "/shortcuts/catalog.png",
   workouts: "/icons/plan.png",
+  aerobics: "/icons/heart.png",
   blog: "/icons/sparkles.png",
   play: "/icons/rocket.png",
   moves: "/shortcuts/exercise.png",

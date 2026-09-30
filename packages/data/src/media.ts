@@ -44,6 +44,14 @@ export const EXERCISE_VIDEO: Record<string, string> = {
   "treadmill-jog": `${HD}/treadmill-running.mp4`,
   "stationary-bike": `${HD}/stationary-bike.mp4`,
   elliptical: `${HD}/elliptical.mp4`,
+  "jumping-jack": `${HD}/jumping-jack.mp4`,
+  "bodyweight-squat": `${HD}/squat.mp4`,
+  burpee: `${HD}/burpee.mp4`,
+  "jump-rope": `${HD}/jump-rope.mp4`,
+  // Feet match the open-hand jack; the plate stays at the chest.
+  "disc-jumping-jack": `${HD}/jumping-jack.mp4`,
+  // Same chest-held shape as a plate squat.
+  "disc-squat": `${HD}/dumbbell-goblet-squat.mp4`,
 };
 
 /** @deprecated Prefer EXERCISE_VIDEO — kept so old imports don't break mid-refactor. */

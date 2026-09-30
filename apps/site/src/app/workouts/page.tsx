@@ -93,7 +93,11 @@ export default async function WorkoutsPage({ searchParams }: PageProps<"/workout
                 Cardio
               </h2>
               <p className="text-sm text-muted-foreground">
-                Finish with one of these, or do it on rest days.
+                Finish with one of these, or do it on rest days. For open-floor moves, see{" "}
+                <Link href="/aerobics" className="font-extrabold text-primary">
+                  aerobics
+                </Link>
+                .
               </p>
             </div>
             <ExerciseGrid exercises={CARDIO_EXERCISES} />

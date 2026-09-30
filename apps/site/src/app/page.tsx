@@ -49,6 +49,10 @@ export default function HomePage() {
               <GameIcon src={ICONS.workouts} className="size-6" />
               Start the quests
             </Link>
+            <Link href="/aerobics" className="btn btn-muted">
+              <GameIcon src={ICONS.aerobics} className="size-6" />
+              Aerobics
+            </Link>
           </div>
         </div>
 

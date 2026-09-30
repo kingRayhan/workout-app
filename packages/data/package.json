@@ -8,6 +8,7 @@
     "./machines": "./src/machines.ts",
     "./media": "./src/media.ts",
     "./cardio": "./src/cardio.ts",
+    "./aerobics": "./src/aerobics.ts",
     "./exercise-extra": "./src/exercise-extra.ts",
     "./catalog": "./src/catalog.ts"
   },
