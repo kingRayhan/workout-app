@@ -8,8 +8,8 @@ import {
   DrawerHeader,
   DrawerTitle,
 } from "@/components/ui/drawer";
-import type { Exercise } from "@/data/plan";
-import { catalogTargetLabel } from "@/lib/catalog";
+import type { Exercise } from "@workoutland/data/plan";
+import { catalogTargetLabel } from "@workoutland/data/catalog";
 import { formatExerciseTargets, type ExerciseSettings } from "@/lib/user-data";
 
 export function ExerciseDrawer({

@@ -32,7 +32,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
 import { TagFilterBar } from "@/components/workout-catalog";
-import type { MuscleGroup } from "@/data/plan";
+import type { MuscleGroup } from "@workoutland/data/plan";
 import { useAllExerciseLogs } from "@/hooks/use-user-data";
 import { useAuth } from "@/lib/auth";
 import {
@@ -43,7 +43,7 @@ import {
   isMuscleTag,
   metricValue,
   progressMetric,
-} from "@/lib/catalog";
+} from "@workoutland/data/catalog";
 import { localDateKey, parseLocalDateKey, relativeDayLabel } from "@/lib/dates";
 import { EXERCISE_LOG_HREF } from "@/lib/routes";
 import {

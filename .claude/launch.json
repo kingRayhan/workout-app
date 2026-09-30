@@ -2,10 +2,16 @@
   "version": "0.0.1",
   "configurations": [
     {
-      "name": "workoutland",
-      "runtimeExecutable": "npm",
-      "runtimeArgs": ["run", "dev"],
+      "name": "mobile",
+      "runtimeExecutable": "bun",
+      "runtimeArgs": ["run", "dev:mobile"],
       "port": 3000
+    },
+    {
+      "name": "site",
+      "runtimeExecutable": "bun",
+      "runtimeArgs": ["run", "dev:site"],
+      "port": 3001
     }
   ]
 }

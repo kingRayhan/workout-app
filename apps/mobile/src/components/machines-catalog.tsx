@@ -4,9 +4,9 @@ import Image from "next/image";
 import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
 import { AppHeader } from "@/components/app-header";
-import { MACHINES, type Machine } from "@/data/machines";
-import { DAYS } from "@/data/plan";
-import { filterMachinesByQuery } from "@/lib/catalog";
+import { MACHINES, type Machine } from "@workoutland/data/machines";
+import { DAYS } from "@workoutland/data/plan";
+import { filterMachinesByQuery } from "@workoutland/data/catalog";
 import { cn } from "@/lib/utils";
 import { ChevronDown } from "lucide-react";
 

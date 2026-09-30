@@ -1,0 +1,7 @@
+procs:
+  mobile:
+    cwd: apps/mobile
+    shell: bun dev
+  site:
+    cwd: apps/site
+    shell: bun dev

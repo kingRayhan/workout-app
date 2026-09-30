@@ -11,7 +11,7 @@ import {
   Zap,
   type LucideIcon,
 } from "lucide-react";
-import type { MuscleGroup } from "@/data/plan";
+import type { MuscleGroup } from "@workoutland/data/plan";
 import { cn } from "@/lib/utils";
 
 /** Transparent 3D icons, keyed by the lucide component's display name. */

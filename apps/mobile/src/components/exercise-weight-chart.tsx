@@ -8,7 +8,7 @@ import {
   ChartTooltipContent,
   type ChartConfig,
 } from "@/components/ui/chart";
-import type { ProgressMetric } from "@/lib/catalog";
+import type { ProgressMetric } from "@workoutland/data/catalog";
 import { parseLocalDateKey } from "@/lib/dates";
 import type { ExerciseLog } from "@/lib/user-data";
 import { cn } from "@/lib/utils";

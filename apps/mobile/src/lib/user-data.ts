@@ -14,12 +14,12 @@ import {
   where,
   writeBatch,
 } from "firebase/firestore";
-import { DAYS, PLAN_META } from "@/data/plan";
+import { DAYS, PLAN_META } from "@workoutland/data/plan";
 import {
   formatCardio,
   getCatalogExercise,
   isCatalogExerciseId,
-} from "@/lib/catalog";
+} from "@workoutland/data/catalog";
 import type { WeekdayKey } from "@/lib/dates";
 import { WEEKDAY_KEYS } from "@/lib/dates";
 import { getFirebaseDb } from "@/lib/firebase";

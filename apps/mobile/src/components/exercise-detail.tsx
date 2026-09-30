@@ -3,11 +3,11 @@
 import Image from "next/image";
 import Link from "next/link";
 import { Badge } from "@/components/ui/badge";
-import { getExerciseExtra } from "@/data/exercise-extra";
-import { getMachine } from "@/data/machines";
-import { EXERCISE_MACHINE, EXERCISE_VIDEO } from "@/data/media";
-import type { Exercise } from "@/data/plan";
-import { catalogTargetLabel } from "@/lib/catalog";
+import { getExerciseExtra } from "@workoutland/data/exercise-extra";
+import { getMachine } from "@workoutland/data/machines";
+import { EXERCISE_MACHINE, EXERCISE_VIDEO } from "@workoutland/data/media";
+import type { Exercise } from "@workoutland/data/plan";
+import { catalogTargetLabel } from "@workoutland/data/catalog";
 import { cn } from "@/lib/utils";
 
 function SectionLabel({ children }: { children: React.ReactNode }) {

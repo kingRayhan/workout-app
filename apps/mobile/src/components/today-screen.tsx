@@ -49,13 +49,13 @@ import {
   TONE_TILE,
   type Tone,
 } from "@/components/icon-tile";
-import type { Exercise, MuscleGroup } from "@/data/plan";
+import type { Exercise, MuscleGroup } from "@workoutland/data/plan";
 import {
   catalogExerciseName,
   getCatalogExercise,
   isCardioExercise,
   MUSCLE_TAGS,
-} from "@/lib/catalog";
+} from "@workoutland/data/catalog";
 import { localDateKey, WEEKDAY_LABELS } from "@/lib/dates";
 import { EXERCISE_LOG_HREF, WEIGHT_LOG_HREF } from "@/lib/routes";
 import {

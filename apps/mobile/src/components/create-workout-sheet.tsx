@@ -16,13 +16,13 @@ import {
   DrawerHeader,
   DrawerTitle,
 } from "@/components/ui/drawer";
-import type { MuscleGroup } from "@/data/plan";
+import type { MuscleGroup } from "@workoutland/data/plan";
 import { useAuth } from "@/lib/auth";
 import {
   allCatalogExercises,
   filterExercisesByQuery,
   filterExercisesByTag,
-} from "@/lib/catalog";
+} from "@workoutland/data/catalog";
 import {
   createWorkout,
   updateWorkout,

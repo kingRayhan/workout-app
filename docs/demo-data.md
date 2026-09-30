@@ -12,7 +12,7 @@ Script: [`scripts/seed-demo.sh`](../scripts/seed-demo.sh) (wraps
 - `gcloud` installed and signed in with an account that has Firestore access to
   the project (default: `graphland.dev@gmail.com`).
 - `python3` (standard library only, nothing to install).
-- `.env.local` contains `NEXT_PUBLIC_FIREBASE_PROJECT_ID`.
+- `apps/mobile/.env.local` contains `NEXT_PUBLIC_FIREBASE_PROJECT_ID`.
 
 If the token has expired:
 
@@ -121,7 +121,7 @@ Run `scripts/seed-demo.sh --help` for the same list.
 | --- | --- | --- |
 | `DEMO_UID` | `wQFKm8g8Sugi83ACdWsTRUBe6ts1` | Seed a different user |
 | `GCLOUD_ACCOUNT` | `graphland.dev@gmail.com` | gcloud account used for the token |
-| `FIREBASE_PROJECT` | from `.env.local` | Target a different project |
+| `FIREBASE_PROJECT` | from `apps/mobile/.env.local` | Target a different project |
 
 Example:
 

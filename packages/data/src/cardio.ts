@@ -1,4 +1,4 @@
-import type { Exercise } from "@/data/plan";
+import type { Exercise } from "./plan";
 
 /** Machine cardio — not part of the trainer days; add it to any workout. */
 export const CARDIO_EXERCISES: Exercise[] = [

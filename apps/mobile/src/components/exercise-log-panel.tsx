@@ -18,7 +18,7 @@ import {
   isCardioExercise,
   metricValue,
   progressMetric,
-} from "@/lib/catalog";
+} from "@workoutland/data/catalog";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/lib/auth";
 import { celebrate } from "@/lib/confetti";

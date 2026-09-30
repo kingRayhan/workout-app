@@ -1,36 +1,58 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# workoutland
 
-## Getting Started
+Bun workspaces monorepo.
 
-First, run the development server:
+| Path | What |
+| --- | --- |
+| `apps/mobile` | The mobile-first gym companion app (`@workoutland/mobile`, port 3000) |
+| `apps/site` | Public site: machines, workouts, blog (`@workoutland/site`, port 3001) |
+| `packages/data` | Shared plan, machines, exercises, media + machine photos (`@workoutland/data`) |
+| `scripts/` | Repo tooling, e.g. demo data seeding ([docs](docs/demo-data.md)) |
+| `docs/` | Specs and guides |
+| `firestore.rules` | Firestore security rules |
+
+## Getting started
 
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+bun install
+cp apps/mobile/.env.example apps/mobile/.env.local   # fill in Firebase config
+cp apps/site/.env.example apps/site/.env.local       # optional: app URL for the site's CTA
+bun dev          # all apps via mprocs (mobile :3000, site :3001)
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+## Scripts (run from the repo root)
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+| Command | Does |
+| --- | --- |
+| `bun dev` | All apps in one terminal via [mprocs](https://github.com/pvolok/mprocs) (`mprocs.yaml`) |
+| `bun dev:mobile` / `bun dev:site` | Dev server for a single app |
+| `bun run build` | Production build of every app |
+| `bun start` / `bun start:site` | Serve a production build |
+| `bun lint` | Lint every workspace |
+| `bun typecheck` | Typecheck `@workoutland/data` |
+| `bun seed:demo` | Seed demo data into Firestore |
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+To run a script in one workspace: `bun --filter @workoutland/site <script>`.
+To add a dependency to one app: `bun add <pkg> --cwd apps/site`.
 
-## Learn More
+## Shared data
 
-To learn more about Next.js, take a look at the following resources:
+Import from subpaths, e.g. `import { MACHINES } from "@workoutland/data/machines"`
+(`plan`, `machines`, `cardio`, `media`, `exercise-extra`, `catalog`).
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+Machine photos live in `packages/data/assets/machines`, and the 3D icons in
+`assets/icons` and `assets/shortcuts`. Each app's `predev` / `prebuild` runs
+`workoutland-copy-assets`, which copies those folders into the app's `public/`
+(gitignored).
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+## Blog posts
 
-## Deploy on Vercel
+Add `apps/site/src/content/blog/<slug>.mdx` and an entry in
+`apps/site/src/content/posts.ts`.
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+## Adding a shared package
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+Create `packages/<name>/package.json` with `"name": "@workoutland/<name>"`, then
+depend on it from an app with `"@workoutland/<name>": "workspace:*"` and run
+`bun install`. Turbopack compiles workspace TypeScript directly; no build step
+or `transpilePackages` needed.

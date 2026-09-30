@@ -1,0 +1,180 @@
+@import "tailwindcss";
+@plugin "@tailwindcss/typography";
+
+/* Same dark palette and chunky "lip" chrome as the mobile app. */
+:root {
+  --background: oklch(0.141 0.005 285.823);
+  --foreground: oklch(0.985 0 0);
+  --card: oklch(0.21 0.006 285.885);
+  --muted: oklch(0.274 0.006 286.033);
+  --muted-foreground: oklch(0.705 0.015 286.067);
+  --primary: oklch(0.768 0.233 130.85);
+  --primary-foreground: oklch(0.274 0.072 132.109);
+  --border: oklch(1 0 0 / 10%);
+  --lip: oklch(0.08 0.008 286);
+  --lip-primary: oklch(0.42 0.13 132);
+  --radius: 1rem;
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-border: var(--border);
+  --font-sans: var(--font-geist-sans);
+  --font-mono: var(--font-geist-mono);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) + 4px);
+}
+
+html {
+  color-scheme: dark;
+}
+
+body {
+  background-color: oklch(0.1 0.008 286);
+  background-image:
+    radial-gradient(
+      ellipse 70% 45% at 50% 0%,
+      color-mix(in oklch, var(--primary) 22%, transparent),
+      transparent 55%
+    ),
+    linear-gradient(180deg, oklch(0.16 0.01 286) 0%, oklch(0.1 0.008 286) 100%);
+  color: var(--foreground);
+  -webkit-tap-highlight-color: transparent;
+}
+
+/* Pressable panel: flat face, solid lip, sinks on press. */
+.panel {
+  border-radius: 1rem;
+  background: var(--card);
+  box-shadow: 0 4px 0 var(--lip);
+}
+
+a.panel:active,
+button.panel:active {
+  transform: translateY(3px);
+  box-shadow: 0 1px 0 var(--lip);
+}
+
+.btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  border-radius: 1rem;
+  padding: 0.7rem 1.1rem;
+  font-weight: 800;
+  background: var(--primary);
+  color: var(--primary-foreground);
+  box-shadow:
+    inset 0 1px 0 oklch(1 0 0 / 40%),
+    0 4px 0 var(--lip-primary);
+}
+
+.btn:active {
+  transform: translateY(3px);
+  box-shadow:
+    inset 0 1px 0 oklch(1 0 0 / 22%),
+    0 1px 0 var(--lip-primary);
+}
+
+.btn-muted {
+  background: var(--muted);
+  color: var(--foreground);
+  box-shadow:
+    inset 0 1px 0 oklch(1 0 0 / 16%),
+    0 4px 0 var(--lip);
+}
+
+.btn-muted:active {
+  box-shadow:
+    inset 0 1px 0 oklch(1 0 0 / 10%),
+    0 1px 0 var(--lip);
+}
+
+.chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  border-radius: 999px;
+  background: var(--muted);
+  padding: 0.35rem 0.85rem;
+  font-size: 0.875rem;
+  font-weight: 700;
+  color: var(--muted-foreground);
+  box-shadow:
+    inset 0 1px 0 oklch(1 0 0 / 12%),
+    0 3px 0 var(--lip);
+}
+
+.chip:active {
+  transform: translateY(2px);
+  box-shadow: 0 1px 0 var(--lip);
+}
+
+.chip-on {
+  background: var(--primary);
+  color: var(--primary-foreground);
+  box-shadow:
+    inset 0 1px 0 oklch(1 0 0 / 40%),
+    0 3px 0 var(--lip-primary);
+}
+
+.badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  border-radius: 999px;
+  background: color-mix(in oklch, var(--primary) 18%, transparent);
+  padding: 0.15rem 0.55rem;
+  font-size: 0.7rem;
+  font-weight: 800;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--primary);
+  box-shadow:
+    inset 0 1px 0 oklch(1 0 0 / 20%),
+    0 2px 0 oklch(0.4 0.1 132);
+}
+
+.xp-track {
+  height: 0.7rem;
+  overflow: hidden;
+  border-radius: 999px;
+  background: oklch(0.14 0.008 286);
+  box-shadow:
+    inset 0 2px 0 oklch(0 0 0 / 50%),
+    inset 0 -1px 0 oklch(1 0 0 / 10%);
+}
+
+.xp-fill {
+  height: 100%;
+  border-radius: inherit;
+  background: linear-gradient(
+    180deg,
+    oklch(0.9 0.19 128) 0%,
+    var(--primary) 55%,
+    oklch(0.6 0.17 132) 100%
+  );
+  box-shadow: inset 0 1px 0 oklch(1 0 0 / 50%);
+}
+
+.step-pip {
+  display: grid;
+  width: 1.6rem;
+  height: 1.6rem;
+  flex-shrink: 0;
+  place-items: center;
+  border-radius: 999px;
+  background: var(--muted);
+  font-family: var(--font-geist-mono), ui-monospace, monospace;
+  font-size: 0.75rem;
+  font-weight: 800;
+  box-shadow:
+    inset 0 1px 0 oklch(1 0 0 / 16%),
+    0 2px 0 var(--lip);
+}

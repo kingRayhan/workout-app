@@ -1,0 +1,24 @@
+{
+  "name": "@workoutland/data",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    "./plan": "./src/plan.ts",
+    "./machines": "./src/machines.ts",
+    "./media": "./src/media.ts",
+    "./cardio": "./src/cardio.ts",
+    "./exercise-extra": "./src/exercise-extra.ts",
+    "./catalog": "./src/catalog.ts"
+  },
+  "bin": {
+    "workoutland-copy-assets": "./scripts/copy-assets.ts"
+  },
+  "scripts": {
+    "typecheck": "tsc --noEmit"
+  },
+  "devDependencies": {
+    "@types/bun": "^1",
+    "typescript": "^5"
+  }
+}

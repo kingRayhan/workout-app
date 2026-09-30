@@ -16,7 +16,7 @@
 # Env overrides:
 #   DEMO_UID        Firebase user id   (default: demo account)
 #   GCLOUD_ACCOUNT  gcloud account with Firestore access
-#   FIREBASE_PROJECT  project id       (default: from .env.local)
+#   FIREBASE_PROJECT  project id       (default: from apps/mobile/.env.local)
 set -euo pipefail
 
 cd "$(dirname "$0")/.."
@@ -24,11 +24,11 @@ cd "$(dirname "$0")/.."
 DEMO_UID="${DEMO_UID:-wQFKm8g8Sugi83ACdWsTRUBe6ts1}"
 GCLOUD_ACCOUNT="${GCLOUD_ACCOUNT:-graphland.dev@gmail.com}"
 
-if [[ -z "${FIREBASE_PROJECT:-}" && -f .env.local ]]; then
-  FIREBASE_PROJECT="$(grep -E '^NEXT_PUBLIC_FIREBASE_PROJECT_ID=' .env.local | cut -d= -f2- | tr -d '"'"'"' ')"
+if [[ -z "${FIREBASE_PROJECT:-}" && -f apps/mobile/.env.local ]]; then
+  FIREBASE_PROJECT="$(grep -E '^NEXT_PUBLIC_FIREBASE_PROJECT_ID=' apps/mobile/.env.local | cut -d= -f2- | tr -d '"'"'"' ')"
 fi
 if [[ -z "${FIREBASE_PROJECT:-}" ]]; then
-  echo "Set FIREBASE_PROJECT or NEXT_PUBLIC_FIREBASE_PROJECT_ID in .env.local" >&2
+  echo "Set FIREBASE_PROJECT or NEXT_PUBLIC_FIREBASE_PROJECT_ID in apps/mobile/.env.local" >&2
   exit 1
 fi
 

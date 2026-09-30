@@ -1,10 +1,10 @@
-import { CARDIO_EXERCISES } from "@/data/cardio";
+import { CARDIO_EXERCISES } from "./cardio";
 import {
   DAYS,
   type Exercise,
   type MuscleGroup,
-} from "@/data/plan";
-import { MACHINES, type Machine } from "@/data/machines";
+} from "./plan";
+import { MACHINES, type Machine } from "./machines";
 
 const BY_ID = new Map<string, Exercise>();
 for (const day of DAYS) {

@@ -7,7 +7,7 @@ import {
   cardioMetrics,
   isCardioExercise,
   type CardioMetric,
-} from "@/lib/catalog";
+} from "@workoutland/data/catalog";
 import {
   formatRest,
   SETTINGS_LIMITS,

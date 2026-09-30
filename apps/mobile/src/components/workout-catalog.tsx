@@ -3,15 +3,15 @@
 import { useEffect, useMemo, useState } from "react";
 import { AppHeader } from "@/components/app-header";
 import { ExerciseDetail } from "@/components/exercise-detail";
-import { MEDIA_CREDIT } from "@/data/media";
-import { PLAN_META, type Exercise, type MuscleGroup } from "@/data/plan";
+import { MEDIA_CREDIT } from "@workoutland/data/media";
+import { PLAN_META, type Exercise, type MuscleGroup } from "@workoutland/data/plan";
 import {
   allCatalogExercises,
   catalogTargetLabel,
   filterExercisesByQuery,
   filterExercisesByTag,
   MUSCLE_TAGS,
-} from "@/lib/catalog";
+} from "@workoutland/data/catalog";
 import { cn } from "@/lib/utils";
 import { ChevronDown } from "lucide-react";
 

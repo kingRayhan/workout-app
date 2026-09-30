@@ -1,0 +1,22 @@
+{
+  "name": "workoutland",
+  "private": true,
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ],
+  "scripts": {
+    "dev": "mprocs",
+    "dev:mobile": "bun --filter @workoutland/mobile dev",
+    "dev:site": "bun --filter @workoutland/site dev",
+    "build": "bun --filter './apps/*' build",
+    "start": "bun --filter @workoutland/mobile start",
+    "start:site": "bun --filter @workoutland/site start",
+    "lint": "bun --filter '*' lint",
+    "typecheck": "bun --filter @workoutland/data typecheck",
+    "seed:demo": "scripts/seed-demo.sh"
+  },
+  "devDependencies": {
+    "mprocs": "^0.9.6"
+  }
+}

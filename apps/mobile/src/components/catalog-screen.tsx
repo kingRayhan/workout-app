@@ -8,9 +8,9 @@ import { MachinesCatalog } from "@/components/machines-catalog";
 import { WorkoutCatalog } from "@/components/workout-catalog";
 import { Input } from "@/components/ui/input";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { PLAN_META } from "@/data/plan";
-import { MACHINES } from "@/data/machines";
-import { allCatalogExercises, isMuscleTag } from "@/lib/catalog";
+import { PLAN_META } from "@workoutland/data/plan";
+import { MACHINES } from "@workoutland/data/machines";
+import { allCatalogExercises, isMuscleTag } from "@workoutland/data/catalog";
 import { Search } from "lucide-react";
 import { IconImage } from "@/components/icon-tile";
 

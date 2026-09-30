@@ -47,13 +47,13 @@ import {
   DrawerHeader,
   DrawerTitle,
 } from "@/components/ui/drawer";
-import type { MuscleGroup } from "@/data/plan";
+import type { MuscleGroup } from "@workoutland/data/plan";
 import { useAuth } from "@/lib/auth";
 import {
   catalogExerciseName,
   getCatalogExercise,
   MUSCLE_TAGS,
-} from "@/lib/catalog";
+} from "@workoutland/data/catalog";
 import { WEEKDAY_KEYS, WEEKDAY_LABELS } from "@/lib/dates";
 import {
   defaultExerciseSettings,
